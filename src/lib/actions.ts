@@ -1,28 +1,13 @@
-
 'use server';
 
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import { revalidatePath } from 'next/cache';
-
-const baseDataDirectory = path.join(process.cwd(), 'data');
-
-async function ensureDirectoryExists(directoryPath: string) {
-  try {
-    await fs.access(directoryPath);
-  } catch {
-    await fs.mkdir(directoryPath, { recursive: true });
-  }
-}
+import { db } from './firebase';
+import { collection, doc, getDoc, getDocs, setDoc, writeBatch } from 'firebase/firestore';
 
 export async function listLocations(): Promise<string[]> {
     try {
-        await ensureDirectoryExists(baseDataDirectory);
-        const entries = await fs.readdir(baseDataDirectory, { withFileTypes: true });
-        const directories = entries
-            .filter(dirent => dirent.isDirectory())
-            .map(dirent => dirent.name);
-        return directories;
+        const querySnapshot = await getDocs(collection(db, 'locations'));
+        return querySnapshot.docs.map(docSnap => docSnap.id);
     } catch (error) {
         console.error('Error listing locations:', error);
         return [];
@@ -30,19 +15,16 @@ export async function listLocations(): Promise<string[]> {
 }
 
 export async function addLocation(locationName: string): Promise<void> {
-    const locationDirectory = path.join(baseDataDirectory, locationName);
-    try {
-        await fs.access(locationDirectory);
+    const locationRef = doc(db, 'locations', locationName);
+    const docSnap = await getDoc(locationRef);
+    if (docSnap.exists()) {
         throw new Error(`A unidade "${locationName}" já existe.`);
-    } catch (error: any) {
-        if (error.code !== 'ENOENT') {
-            throw error;
-        }
     }
-    
-    await ensureDirectoryExists(locationDirectory);
 
-    // Create empty files for the new location
+    // Create location doc
+    await setDoc(locationRef, { name: locationName, createdAt: new Date().toISOString() });
+
+    // Create default files
     const defaultFiles = {
         'specialists.json': [],
         'goals.json': [],
@@ -57,29 +39,42 @@ export async function addLocation(locationName: string): Promise<void> {
         'logs.json': [],
     };
 
+    const batch = writeBatch(db);
     for (const [filename, content] of Object.entries(defaultFiles)) {
-        await fs.writeFile(path.join(locationDirectory, filename), JSON.stringify(content, null, 2), 'utf8');
+        const fileRef = doc(db, 'locations', locationName, 'data', filename);
+        batch.set(fileRef, { content });
     }
+    await batch.commit();
+
     revalidatePath('/');
 }
 
 export async function updateLocation(oldLocationName: string, newLocationName: string): Promise<void> {
-    const oldDirectory = path.join(baseDataDirectory, oldLocationName);
-    const newDirectory = path.join(baseDataDirectory, newLocationName);
-
     if (oldLocationName === newLocationName) return;
 
-    try {
-        await fs.access(newDirectory);
+    const oldLocationRef = doc(db, 'locations', oldLocationName);
+    const newLocationRef = doc(db, 'locations', newLocationName);
+
+    const newDocSnap = await getDoc(newLocationRef);
+    if (newDocSnap.exists()) {
         throw new Error(`A unidade "${newLocationName}" já existe.`);
-    } catch (error: any) {
-        if (error.code !== 'ENOENT') {
-            throw error;
-        }
     }
-    
+
     try {
-        await fs.rename(oldDirectory, newDirectory);
+        await setDoc(newLocationRef, { name: newLocationName, updatedAt: new Date().toISOString() });
+
+        const dataSnapshot = await getDocs(collection(db, 'locations', oldLocationName, 'data'));
+        const batch = writeBatch(db);
+        
+        dataSnapshot.forEach((docSnap) => {
+            const newFileRef = doc(db, 'locations', newLocationName, 'data', docSnap.id);
+            batch.set(newFileRef, docSnap.data());
+            batch.delete(docSnap.ref);
+        });
+
+        batch.delete(oldLocationRef);
+        await batch.commit();
+
         revalidatePath('/');
     } catch (error) {
         console.error(`Error updating location from ${oldLocationName} to ${newLocationName}:`, error);
@@ -88,9 +83,18 @@ export async function updateLocation(oldLocationName: string, newLocationName: s
 }
 
 export async function deleteLocation(locationName: string): Promise<void> {
-    const locationDirectory = path.join(baseDataDirectory, locationName);
     try {
-        await fs.rm(locationDirectory, { recursive: true, force: true });
+        const locationRef = doc(db, 'locations', locationName);
+        
+        const dataSnapshot = await getDocs(collection(db, 'locations', locationName, 'data'));
+        const batch = writeBatch(db);
+        dataSnapshot.forEach((docSnap) => {
+            batch.delete(docSnap.ref);
+        });
+        
+        batch.delete(locationRef);
+        await batch.commit();
+
         revalidatePath('/');
     } catch (error) {
         console.error(`Error deleting location ${locationName}:`, error);
@@ -98,39 +102,32 @@ export async function deleteLocation(locationName: string): Promise<void> {
     }
 }
 
-
 export async function readData<T>(filename: string, defaultData: T, location: string): Promise<T> {
-  const locationDirectory = path.join(baseDataDirectory, location);
-  const filePath = path.join(locationDirectory, filename);
+  if (!location) return defaultData;
+  const docRef = doc(db, 'locations', location, 'data', filename);
   try {
-    await ensureDirectoryExists(locationDirectory);
-    const fileContent = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      // File doesn't exist for this location, write default and return it
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap.data()?.content as T;
+    } else {
       await writeData(filename, defaultData, location);
       return defaultData;
     }
+  } catch (error) {
     console.error(`Error reading ${filename} from ${location}:`, error);
-    // Return default data in case of other errors
     return defaultData;
   }
 }
 
 export async function writeData<T>(filename: string, data: T, location: string): Promise<void> {
-  const locationDirectory = path.join(baseDataDirectory, location);
-  const filePath = path.join(locationDirectory, filename);
+  const docRef = doc(db, 'locations', location, 'data', filename);
   try {
-    await ensureDirectoryExists(locationDirectory);
-    const fileContent = JSON.stringify(data, null, 2);
-    await fs.writeFile(filePath, fileContent, 'utf8');
+    await setDoc(docRef, { content: data });
   } catch (error) {
     console.error(`Error writing to ${filename} in ${location}:`, error);
     throw new Error(`Could not write to ${filename} in ${location}`);
   }
 }
-
 
 export async function saveData(
     dataType: 'specialists' | 'goals' | 'holidays' | 'agenda' | 'templates' | 'candidates' | 'leads' | 'students' | 'paid-bonuses' | 'academic-period' | 'logs', 
