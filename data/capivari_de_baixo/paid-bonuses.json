@@ -1,0 +1,59 @@
+{
+  "comparisonGoals": {
+    "Tubarão/SC": {
+      "registrations": 1280,
+      "enrollments": 790,
+      "engaged": 450
+    },
+    "Criciúma/SC": {
+      "registrations": 2160,
+      "enrollments": 1190,
+      "engaged": 690
+    },
+    "Braço Do Norte/SC": {
+      "registrations": 590,
+      "enrollments": 350,
+      "engaged": 250
+    },
+    "Içara/SC": {
+      "registrations": 460,
+      "enrollments": 270,
+      "engaged": 180
+    },
+    "Araranguá/SC": {
+      "registrations": 520,
+      "enrollments": 270,
+      "engaged": 150
+    },
+    "Forquilhinha/SC - Santa Ana": {
+      "registrations": 240,
+      "enrollments": 170,
+      "engaged": 70
+    },
+    "Lauro Muller/SC": {
+      "registrations": 210,
+      "enrollments": 130,
+      "engaged": 80
+    },
+    "Jaguaruna/SC": {
+      "registrations": 190,
+      "enrollments": 110,
+      "engaged": 80
+    },
+    "Capivari de Baixo/SC": {
+      "registrations": 220,
+      "enrollments": 140,
+      "engaged": 70
+    },
+    "Sombrio/SC": {
+      "registrations": 290,
+      "enrollments": 140,
+      "engaged": 90
+    },
+    "Urussanga/SC": {
+      "registrations": 150,
+      "enrollments": 90,
+      "engaged": 50
+    }
+  }
+}

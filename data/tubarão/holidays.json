@@ -1,0 +1,67 @@
+[
+  {
+    "id": "e5225aa5-0fe7-4b3d-8774-ddcaad51dcd2",
+    "name": "Confraternização mundial",
+    "date": "2026-01-01"
+  },
+  {
+    "id": "662de4d1-6103-43fb-a72c-bc024773870b",
+    "name": "Carnaval",
+    "date": "2026-02-17"
+  },
+  {
+    "id": "fdd0a653-993d-4283-a784-a7280f7ed65f",
+    "name": "Sexta-feira Santa",
+    "date": "2026-04-03"
+  },
+  {
+    "id": "6f39ed86-5c04-4429-83fe-21d5c31237d2",
+    "name": "Páscoa",
+    "date": "2026-04-05"
+  },
+  {
+    "id": "9ec05e70-1185-4a36-9543-3865aac6bc2a",
+    "name": "Tiradentes",
+    "date": "2026-04-21"
+  },
+  {
+    "id": "ebbe2ad1-b55f-4a43-b064-c6715a487275",
+    "name": "Dia do trabalho",
+    "date": "2026-05-01"
+  },
+  {
+    "id": "b885b1fd-5215-4d07-baeb-5e85d0850304",
+    "name": "Corpus Christi",
+    "date": "2026-06-04"
+  },
+  {
+    "id": "b5a7b4f7-19a4-4e71-9d22-b2b55e15f659",
+    "name": "Independência do Brasil",
+    "date": "2026-09-07"
+  },
+  {
+    "id": "4b5a5a03-58d1-457b-b223-ac6d0c5c5f62",
+    "name": "Nossa Senhora Aparecida",
+    "date": "2026-10-12"
+  },
+  {
+    "id": "b0084df3-719c-4e45-9eb3-589b9374e4ef",
+    "name": "Finados",
+    "date": "2026-11-02"
+  },
+  {
+    "id": "0a1fcc28-1354-42a9-be07-3503e7bea45c",
+    "name": "Proclamação da República",
+    "date": "2026-11-15"
+  },
+  {
+    "id": "28043db8-f578-4e52-8c3b-4a27c87abde1",
+    "name": "Dia da consciência negra",
+    "date": "2026-11-20"
+  },
+  {
+    "id": "8b100628-1103-4096-868a-ce2814c034db",
+    "name": "Natal",
+    "date": "2026-12-25"
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "1",
+    "type": "Registrations",
+    "target": 1280
+  },
+  {
+    "id": "2",
+    "type": "Enrollments",
+    "target": 790
+  },
+  {
+    "id": "3",
+    "type": "Engagement",
+    "target": 450
+  }
+]

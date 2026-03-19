@@ -1,0 +1,27 @@
+{
+  "paymentCycles": [
+    {
+      "date": "2026-02-20T03:00:00.000Z",
+      "specialistValues": {
+        "João Paulo Botelho": 765
+      }
+    },
+    {
+      "date": "2026-03-20T03:00:00.000Z",
+      "specialistValues": {}
+    },
+    {
+      "date": "2026-04-20T03:00:00.000Z",
+      "specialistValues": {}
+    },
+    {
+      "date": "2026-05-20T03:00:00.000Z",
+      "specialistValues": {}
+    },
+    {
+      "date": "2026-06-20T03:00:00.000Z",
+      "specialistValues": {}
+    }
+  ],
+  "isMetaBonusActive": false
+}
