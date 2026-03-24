@@ -2,11 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from './firebase';
-import { collection, doc, getDoc, getDocs, setDoc, writeBatch } from 'firebase/firestore';
 
 export async function listLocations(): Promise<string[]> {
     try {
-        const querySnapshot = await getDocs(collection(db, 'locations'));
+        const querySnapshot = await db.collection('locations').get();
         return querySnapshot.docs.map(docSnap => docSnap.id);
     } catch (error) {
         console.error('Error listing locations:', error);
@@ -15,16 +14,14 @@ export async function listLocations(): Promise<string[]> {
 }
 
 export async function addLocation(locationName: string): Promise<void> {
-    const locationRef = doc(db, 'locations', locationName);
-    const docSnap = await getDoc(locationRef);
-    if (docSnap.exists()) {
+    const locationRef = db.collection('locations').doc(locationName);
+    const docSnap = await locationRef.get();
+    if (docSnap.exists) {
         throw new Error(`A unidade "${locationName}" já existe.`);
     }
 
-    // Create location doc
-    await setDoc(locationRef, { name: locationName, createdAt: new Date().toISOString() });
+    await locationRef.set({ name: locationName, createdAt: new Date().toISOString() });
 
-    // Create default files
     const defaultFiles = {
         'specialists.json': [],
         'goals.json': [],
@@ -39,9 +36,9 @@ export async function addLocation(locationName: string): Promise<void> {
         'logs.json': [],
     };
 
-    const batch = writeBatch(db);
+    const batch = db.batch();
     for (const [filename, content] of Object.entries(defaultFiles)) {
-        const fileRef = doc(db, 'locations', locationName, 'data', filename);
+        const fileRef = locationRef.collection('data').doc(filename);
         batch.set(fileRef, { content });
     }
     await batch.commit();
@@ -52,22 +49,22 @@ export async function addLocation(locationName: string): Promise<void> {
 export async function updateLocation(oldLocationName: string, newLocationName: string): Promise<void> {
     if (oldLocationName === newLocationName) return;
 
-    const oldLocationRef = doc(db, 'locations', oldLocationName);
-    const newLocationRef = doc(db, 'locations', newLocationName);
+    const oldLocationRef = db.collection('locations').doc(oldLocationName);
+    const newLocationRef = db.collection('locations').doc(newLocationName);
 
-    const newDocSnap = await getDoc(newLocationRef);
-    if (newDocSnap.exists()) {
+    const newDocSnap = await newLocationRef.get();
+    if (newDocSnap.exists) {
         throw new Error(`A unidade "${newLocationName}" já existe.`);
     }
 
     try {
-        await setDoc(newLocationRef, { name: newLocationName, updatedAt: new Date().toISOString() });
+        await newLocationRef.set({ name: newLocationName, updatedAt: new Date().toISOString() });
 
-        const dataSnapshot = await getDocs(collection(db, 'locations', oldLocationName, 'data'));
-        const batch = writeBatch(db);
+        const dataSnapshot = await oldLocationRef.collection('data').get();
+        const batch = db.batch();
         
         dataSnapshot.forEach((docSnap) => {
-            const newFileRef = doc(db, 'locations', newLocationName, 'data', docSnap.id);
+            const newFileRef = newLocationRef.collection('data').doc(docSnap.id);
             batch.set(newFileRef, docSnap.data());
             batch.delete(docSnap.ref);
         });
@@ -84,10 +81,10 @@ export async function updateLocation(oldLocationName: string, newLocationName: s
 
 export async function deleteLocation(locationName: string): Promise<void> {
     try {
-        const locationRef = doc(db, 'locations', locationName);
+        const locationRef = db.collection('locations').doc(locationName);
         
-        const dataSnapshot = await getDocs(collection(db, 'locations', locationName, 'data'));
-        const batch = writeBatch(db);
+        const dataSnapshot = await locationRef.collection('data').get();
+        const batch = db.batch();
         dataSnapshot.forEach((docSnap) => {
             batch.delete(docSnap.ref);
         });
@@ -104,11 +101,11 @@ export async function deleteLocation(locationName: string): Promise<void> {
 
 export async function readData<T>(filename: string, defaultData: T, location: string): Promise<T> {
   if (!location) return defaultData;
-  const docRef = doc(db, 'locations', location, 'data', filename);
+  const docRef = db.collection('locations').doc(location).collection('data').doc(filename);
   try {
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return docSnap.data()?.content as T;
+    const docSnap = await docRef.get();
+    if (docSnap.exists) {
+      return (docSnap.data()?.content as T) ?? defaultData;
     } else {
       await writeData(filename, defaultData, location);
       return defaultData;
@@ -120,9 +117,9 @@ export async function readData<T>(filename: string, defaultData: T, location: st
 }
 
 export async function writeData<T>(filename: string, data: T, location: string): Promise<void> {
-  const docRef = doc(db, 'locations', location, 'data', filename);
+  const docRef = db.collection('locations').doc(location).collection('data').doc(filename);
   try {
-    await setDoc(docRef, { content: data });
+    await docRef.set({ content: data });
   } catch (error) {
     console.error(`Error writing to ${filename} in ${location}:`, error);
     throw new Error(`Could not write to ${filename} in ${location}`);
