@@ -14,13 +14,27 @@ interface AuditLogContextType {
 
 const AuditLogContext = createContext<AuditLogContextType | undefined>(undefined);
 
+import { doc, onSnapshot } from 'firebase/firestore';
+import { clientDb } from '@/lib/firebase';
+
 export const AuditLogProvider = ({ children, initialData }: { children: ReactNode, initialData: AuditLogEntry[] }) => {
   const { location } = useLocation();
   const [logs, setLogs] = useState<AuditLogEntry[]>(initialData);
 
+  // Real-time synchronization
   useEffect(() => {
-    setLogs(initialData);
-  }, [initialData]);
+    if (!location) return;
+
+    const docRef = doc(clientDb, 'locations', location, 'data', 'logs.json');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data().content as AuditLogEntry[];
+        setLogs(data);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [location]);
 
   const logAction = async (action: string, details: string) => {
     if (!location) return;

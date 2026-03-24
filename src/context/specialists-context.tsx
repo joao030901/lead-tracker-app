@@ -12,18 +12,31 @@ interface SpecialistsContextType {
 
 const SpecialistsContext = createContext<SpecialistsContextType | undefined>(undefined);
 
+import { doc, onSnapshot } from 'firebase/firestore';
+import { clientDb } from '@/lib/firebase';
+
 export const SpecialistsProvider = ({ children, initialData }: { children: ReactNode, initialData: Specialist[] }) => {
   const { location } = useLocation();
   const [specialists, setSpecialists] = useState<Specialist[]>(initialData);
 
+  // Real-time synchronization
   useEffect(() => {
-    setSpecialists(initialData);
-  }, [initialData])
+    if (!location) return;
+
+    const docRef = doc(clientDb, 'locations', location, 'data', 'specialists.json');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data().content as Specialist[];
+        setSpecialists(data);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [location]);
 
   const setSpecialistsAndSave: Dispatch<SetStateAction<Specialist[]>> = (value) => {
     if (!location) return;
     const newValue = typeof value === 'function' ? value(specialists) : value;
-    setSpecialists(newValue);
     saveData('specialists', location, newValue, ['/admin', '/dashboard', '/candidates']);
   };
 

@@ -14,13 +14,27 @@ interface PaidBonusesContextType {
 
 const PaidBonusesContext = createContext<PaidBonusesContextType | undefined>(undefined);
 
+import { doc, onSnapshot } from 'firebase/firestore';
+import { clientDb } from '@/lib/firebase';
+
 export const PaidBonusesProvider = ({ children, initialData }: { children: ReactNode, initialData: PaidBonusesData }) => {
   const { location } = useLocation();
   const [paidBonuses, setPaidBonuses] = useState<PaidBonusesData>(initialData);
 
+  // Real-time synchronization
   useEffect(() => {
-    setPaidBonuses(initialData);
-  }, [initialData]);
+    if (!location) return;
+
+    const docRef = doc(clientDb, 'locations', location, 'data', 'paid-bonuses.json');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data().content as PaidBonusesData;
+        setPaidBonuses(data);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [location]);
 
   const setPaidBonusesAndSave: Dispatch<SetStateAction<PaidBonusesData>> = (value) => {
     if (!location) return;

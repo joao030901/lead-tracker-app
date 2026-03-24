@@ -1,10 +1,11 @@
-
 'use client';
 
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
 import type { Candidate } from '@/lib/types';
 import { saveData } from '@/lib/actions';
 import { useLocation } from './location-context';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { clientDb } from '@/lib/firebase';
 
 interface CandidatesContextType {
   candidates: Candidate[];
@@ -33,14 +34,24 @@ export const CandidatesProvider = ({ children, initialData }: { children: ReactN
     enrDate: undefined,
   });
 
+  // Real-time synchronization
   useEffect(() => {
-    setCandidates(initialData);
-  }, [initialData]);
+    if (!location) return;
+
+    const docRef = doc(clientDb, 'locations', location, 'data', 'candidates.json');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data().content as Candidate[];
+        setCandidates(data);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [location]);
 
   const setCandidatesAndSave: Dispatch<SetStateAction<Candidate[]>> = (value) => {
     if (!location) return;
     const newValue = typeof value === 'function' ? value(candidates) : value;
-    setCandidates(newValue);
     saveData('candidates', location, newValue, ['/candidates', '/dashboard', '/admin']);
   };
 

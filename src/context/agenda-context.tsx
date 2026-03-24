@@ -12,18 +12,31 @@ interface AgendaContextType {
 
 const AgendaContext = createContext<AgendaContextType | undefined>(undefined);
 
+import { doc, onSnapshot } from 'firebase/firestore';
+import { clientDb } from '@/lib/firebase';
+
 export const AgendaProvider = ({ children, initialData }: { children: ReactNode, initialData: AgendaTask[] }) => {
   const { location } = useLocation();
   const [tasks, setTasks] = useState<AgendaTask[]>(initialData);
 
+  // Real-time synchronization
   useEffect(() => {
-    setTasks(initialData);
-  }, [initialData]);
+    if (!location) return;
+
+    const docRef = doc(clientDb, 'locations', location, 'data', 'agenda.json');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data().content as AgendaTask[];
+        setTasks(data);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [location]);
 
   const setTasksAndSave: Dispatch<SetStateAction<AgendaTask[]>> = (value) => {
     if (!location) return;
     const newValue = typeof value === 'function' ? value(tasks) : value;
-    setTasks(newValue);
     saveData('agenda', location, newValue, ['/admin', '/agenda']);
   };
 

@@ -12,18 +12,31 @@ interface TemplatesContextType {
 
 const TemplatesContext = createContext<TemplatesContextType | undefined>(undefined);
 
+import { doc, onSnapshot } from 'firebase/firestore';
+import { clientDb } from '@/lib/firebase';
+
 export const TemplatesProvider = ({ children, initialData }: { children: ReactNode, initialData: MessageTemplate[] }) => {
   const { location } = useLocation();
   const [templates, setTemplates] = useState<MessageTemplate[]>(initialData);
 
+  // Real-time synchronization
   useEffect(() => {
-    setTemplates(initialData);
-  }, [initialData]);
+    if (!location) return;
+
+    const docRef = doc(clientDb, 'locations', location, 'data', 'templates.json');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data().content as MessageTemplate[];
+        setTemplates(data);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [location]);
 
   const setTemplatesAndSave: Dispatch<SetStateAction<MessageTemplate[]>> = (value) => {
     if (!location) return;
     const newValue = typeof value === 'function' ? value(templates) : value;
-    setTemplates(newValue);
     saveData('templates', location, newValue, ['/admin', '/candidates']);
   };
 

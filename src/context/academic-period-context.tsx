@@ -17,15 +17,29 @@ const AcademicPeriodContext = createContext<AcademicPeriodContextType | undefine
 
 type PeriodData = { startDate: string | null; endDate: string | null };
 
+import { doc, onSnapshot } from 'firebase/firestore';
+import { clientDb } from '@/lib/firebase';
+
 export const AcademicPeriodProvider = ({ children, initialData }: { children: ReactNode, initialData: PeriodData }) => {
   const { location } = useLocation();
   const [startDate, setStartDate] = useState<Date | null>(initialData.startDate ? parseISO(initialData.startDate) : null);
   const [endDate, setEndDate] = useState<Date | null>(initialData.endDate ? parseISO(initialData.endDate) : null);
 
+  // Real-time synchronization
   useEffect(() => {
-    setStartDate(initialData.startDate ? parseISO(initialData.startDate) : null);
-    setEndDate(initialData.endDate ? parseISO(initialData.endDate) : null);
-  }, [initialData]);
+    if (!location) return;
+
+    const docRef = doc(clientDb, 'locations', location, 'data', 'academic-period.json');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data().content as PeriodData;
+        setStartDate(data.startDate ? parseISO(data.startDate) : null);
+        setEndDate(data.endDate ? parseISO(data.endDate) : null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [location]);
 
   const handleSetStartDate = (date: Date | undefined) => {
     const newStartDate = date || null;

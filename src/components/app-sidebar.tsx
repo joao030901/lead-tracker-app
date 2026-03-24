@@ -40,6 +40,8 @@ import { useMemo } from 'react';
 import { parse, isToday } from 'date-fns';
 import { AgendaTask } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 const menuItems = [
   {
@@ -162,9 +164,14 @@ export default function AppSidebar() {
   const { theme, setTheme } = useTheme();
   const { open, setOpen, isMobile } = useSidebar();
 
-  const handleLogout = () => {
-    clearLocation();
-    router.push('/');
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      clearLocation();
+      router.push('/login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   }
   
   const formatLocationName = (name: string | null) => {

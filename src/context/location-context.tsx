@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import Cookies from 'js-cookie';
 
 type Location = string;
 
@@ -12,24 +13,16 @@ interface LocationContextType {
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
 
-export const LocationProvider = ({ children }: { children: ReactNode }) => {
-  const [location, setLocationState] = useState<Location | null>(null);
-
-  useEffect(() => {
-    // This code runs only on the client-side
-    const storedLocation = localStorage.getItem('app_location') as Location | null;
-    if (storedLocation) {
-      setLocationState(storedLocation);
-    }
-  }, []);
+export const LocationProvider = ({ children, initialLocation }: { children: ReactNode, initialLocation: Location | null }) => {
+  const [location, setLocationState] = useState<Location | null>(initialLocation);
 
   const setLocation = (newLocation: Location) => {
-    localStorage.setItem('app_location', newLocation);
+    Cookies.set('app_location', newLocation, { expires: 365 });
     setLocationState(newLocation);
   };
   
   const clearLocation = () => {
-    localStorage.removeItem('app_location');
+    Cookies.remove('app_location');
     setLocationState(null);
   };
 

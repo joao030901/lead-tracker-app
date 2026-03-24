@@ -17,6 +17,9 @@ interface StudentsContextType {
 
 const StudentsContext = createContext<StudentsContextType | undefined>(undefined);
 
+import { doc, onSnapshot } from 'firebase/firestore';
+import { clientDb } from '@/lib/firebase';
+
 export const StudentsProvider = ({ children, initialData }: { children: ReactNode, initialData: Student[] }) => {
   const { location } = useLocation();
   const [students, setStudents] = useState<Student[]>(initialData);
@@ -32,14 +35,24 @@ export const StudentsProvider = ({ children, initialData }: { children: ReactNod
     defaulter: 'all',
   });
 
+  // Real-time synchronization
   useEffect(() => {
-    setStudents(initialData);
-  }, [initialData]);
+    if (!location) return;
+
+    const docRef = doc(clientDb, 'locations', location, 'data', 'students.json');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data().content as Student[];
+        setStudents(data);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [location]);
 
   const setStudentsAndSave: Dispatch<SetStateAction<Student[]>> = (value) => {
     if (!location) return;
     const newValue = typeof value === 'function' ? value(students) : value;
-    setStudents(newValue);
     saveData('students', location, newValue, ['/students']);
   };
 

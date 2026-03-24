@@ -12,13 +12,27 @@ interface HolidaysContextType {
 
 const HolidaysContext = createContext<HolidaysContextType | undefined>(undefined);
 
+import { doc, onSnapshot } from 'firebase/firestore';
+import { clientDb } from '@/lib/firebase';
+
 export const HolidaysProvider = ({ children, initialData }: { children: ReactNode, initialData: Holiday[] }) => {
   const { location } = useLocation();
   const [holidays, setHolidays] = useState<Holiday[]>(initialData);
 
+  // Real-time synchronization
   useEffect(() => {
-    setHolidays(initialData);
-  },[initialData]);
+    if (!location) return;
+
+    const docRef = doc(clientDb, 'locations', location, 'data', 'holidays.json');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data().content as Holiday[];
+        setHolidays(data);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [location]);
 
   const setHolidaysAndSave: Dispatch<SetStateAction<Holiday[]>> = (value) => {
     if (!location) return;

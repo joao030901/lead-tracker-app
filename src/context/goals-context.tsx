@@ -1,4 +1,3 @@
-
 'use client';
 
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
@@ -8,6 +7,8 @@ import { isWithinInterval, parseISO } from 'date-fns';
 import { useCandidates } from './candidates-context';
 import { saveData } from '@/lib/actions';
 import { useLocation } from './location-context';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { clientDb } from '@/lib/firebase';
 
 interface GoalsContextType {
   goals: Goal[];
@@ -68,19 +69,37 @@ export const GoalsProvider = ({ children, initialData }: { children: ReactNode, 
   const { candidates } = useCandidates();
   const { startDate, endDate } = useAcademicPeriod();
 
+  // Real-time synchronization for Goals targets
   useEffect(() => {
-    if (initialData.length === 0 && location) {
-        const newGoals = defaultGoals.map(g => ({...g, achieved: 0}));
-        setGoals(newGoals);
-        saveData('goals', location, newGoals.map(({id, type, target}) => ({id, type, target})), ['/admin', '/dashboard']);
-    } else {
-        const goalsToSet = defaultGoals.map(dg => {
-            const existingGoal = initialData.find(ig => ig.type === dg.type);
-            return existingGoal ? { ...dg, ...existingGoal, achieved: 0 } : { ...dg, achieved: 0 };
+    if (!location) return;
+
+    const docRef = doc(clientDb, 'locations', location, 'data', 'goals.json');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const dbData = docSnap.data().content as Goal[];
+        
+        // Merge DB targets with default goals and maintain derived state
+        setGoals(prevGoals => {
+            return defaultGoals.map(dg => {
+                const existingGoal = dbData.find(ig => ig.type === dg.type);
+                const currentGoal = prevGoals.find(pg => pg.type === dg.type);
+                return { 
+                    ...dg, 
+                    ...(existingGoal || {}), 
+                    achieved: currentGoal?.achieved || 0 
+                };
+            });
         });
-        setGoals(goalsToSet);
-    }
-  }, [initialData, location]);
+      } else if (location) {
+          // Initialize if not exists
+          const newGoals = defaultGoals.map(g => ({...g, achieved: 0}));
+          setGoals(newGoals);
+          saveData('goals', location, newGoals.map(({id, type, target}) => ({id, type, target})), ['/admin', '/dashboard']);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [location]);
 
   useEffect(() => {
     if (goals.length > 0 && startDate && endDate) {

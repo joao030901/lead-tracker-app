@@ -4,7 +4,9 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { LocationProvider } from '@/context/location-context';
 import { ThemeProvider } from '@/context/theme-context';
+import { AuthProvider } from '@/context/auth-context';
 import { Toaster as HotToaster } from 'react-hot-toast';
+import { cookies } from 'next/headers';
 
 
 export const metadata: Metadata = {
@@ -13,11 +15,13 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const initialLocation = cookieStore.get('app_location')?.value || null;
   
   return (
     <html lang="pt-BR" suppressHydrationWarning>
@@ -29,9 +33,11 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <ThemeProvider>
-            <LocationProvider>
+          <AuthProvider>
+            <LocationProvider initialLocation={initialLocation}>
               {children}
             </LocationProvider>
+          </AuthProvider>
         </ThemeProvider>
         <Toaster />
         <HotToaster />
