@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { db } from './firebase';
+import { db } from './firebase-admin';
 
 export async function listLocations(): Promise<string[]> {
     try {
