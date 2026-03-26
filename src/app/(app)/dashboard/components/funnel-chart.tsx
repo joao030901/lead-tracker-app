@@ -43,23 +43,32 @@ export function FunnelChart() {
   const { chartData, totalCanceled } = useMemo(() => {
     if (!startDate || !endDate) return { chartData: [], totalCanceled: 0 };
 
-    const filteredCandidates = candidates.filter(c => {
+    // Acumuladores para evitar múltiplos filtros
+    let totalRegistered = 0;
+    let totalEnrolled = 0;
+    let totalEngaged = 0;
+    let canceledCount = 0;
+
+    candidates.forEach(c => {
       const regDate = safeParseDate(c.registrationDate);
-      return regDate && isWithinInterval(regDate, { start: startDate, end: endDate });
+      if (regDate && isWithinInterval(regDate, { start: startDate, end: endDate })) {
+        totalRegistered++;
+        
+        // Verificar se também é uma matrícula no mesmo período (ou vinculada ao registro)
+        if (c.enrollmentDate) {
+          const enrDate = safeParseDate(c.enrollmentDate);
+          if (enrDate && isWithinInterval(enrDate, { start: startDate, end: endDate })) {
+            const isActiveOrCanceledWithDate = c.status === 'Enrolled' || c.status === 'Engaged' || (c.status === 'Canceled' && c.enrollmentDate);
+            
+            if (isActiveOrCanceledWithDate) {
+              totalEnrolled++;
+              if (c.firstPaymentPaid) totalEngaged++;
+              if (c.status === 'Canceled') canceledCount++;
+            }
+          }
+        }
+      }
     });
-
-    const totalRegistered = filteredCandidates.length;
-
-    const enrolledCandidates = filteredCandidates.filter(c => {
-        if (!c.enrollmentDate) return false;
-        const enrDate = safeParseDate(c.enrollmentDate);
-        return enrDate && isWithinInterval(enrDate, { start: startDate, end: endDate }) && 
-               (c.status === 'Enrolled' || c.status === 'Engaged' || (c.status === 'Canceled' && c.enrollmentDate));
-    });
-    
-    const totalEnrolled = enrolledCandidates.length;
-    const totalEngaged = enrolledCandidates.filter(c => c.firstPaymentPaid === true).length;
-    const canceledCount = enrolledCandidates.filter(c => c.status === 'Canceled').length;
 
     const data = [
       {

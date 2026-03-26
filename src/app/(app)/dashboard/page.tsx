@@ -85,23 +85,49 @@ function DashboardContent() {
 
   const dashboardData = useMemo(() => {
     const now = new Date();
+    const today = startOfToday();
+    const startOfCurrentMonth = startOfMonth(now);
+    const endOfCurrentMonth = endOfMonth(now);
     
-    const filteredCandidates = startDate && endDate ? candidates.filter(c => {
-      const regDate = safeParseDate(c.registrationDate);
-      return regDate && isWithinInterval(regDate, { start: startDate, end: endDate });
-    }) : [];
-    
-    const enrolledInPeriod = filteredCandidates.filter(c => {
-      if (!c.enrollmentDate || !startDate || !endDate) return false;
-      const enrDate = safeParseDate(c.enrollmentDate);
-      return enrDate && isWithinInterval(enrDate, { start: startDate, end: endDate }) &&
-      (c.status === 'Enrolled' || c.status === 'Engaged' || (c.status === 'Canceled' && c.enrollmentDate));
-    });
+    // Otimização: Feriados em Set para consulta O(1)
+    const holidayTimestamps = new Set(holidays.map(h => safeParseDate(h.date)?.setHours(0, 0, 0, 0)).filter(Boolean) as number[]);
+    const isWorkingDay = (day: Date) => !isWeekend(day) && !holidayTimestamps.has(day.setHours(0, 0, 0, 0));
 
-    const totalRegistrations = filteredCandidates.length;
-    const totalEnrollments = enrolledInPeriod.length;
-    const engagedEnrollments = enrolledInPeriod.filter(c => c.firstPaymentPaid === true).length;
-    const notEnrolledCount = filteredCandidates.filter(c => !c.enrollmentDate && c.status !== 'Canceled').length;
+    // Estatísticas acumuladores
+    let totalRegistrations = 0;
+    let totalEnrollments = 0;
+    let engagedEnrollments = 0;
+    let notEnrolledCount = 0;
+    let registeredCandidatesCount = 0;
+    let enrollmentsThisMonth = 0;
+
+    if (startDate && endDate) {
+        candidates.forEach(c => {
+            const regDate = safeParseDate(c.registrationDate);
+            const enrDate = safeParseDate(c.enrollmentDate || '');
+            
+            // Filtro por data de inscrição (Período do Dashboard)
+            const isInRegPeriod = regDate && isWithinInterval(regDate, { start: startDate, end: endDate });
+            if (isInRegPeriod) {
+                totalRegistrations++;
+                if (c.status === 'Registered') registeredCandidatesCount++;
+                if (!c.enrollmentDate && c.status !== 'Canceled') notEnrolledCount++;
+            }
+
+            // Filtro por data de matrícula (Período do Dashboard)
+            const isInEnrPeriod = enrDate && isWithinInterval(enrDate, { start: startDate, end: endDate });
+            if (isInEnrPeriod && (c.status === 'Enrolled' || c.status === 'Engaged' || (c.status === 'Canceled' && c.enrollmentDate))) {
+                totalEnrollments++;
+                if (c.firstPaymentPaid) engagedEnrollments++;
+            }
+
+            // Matrículas no mês atual (Geral)
+            if (enrDate && isWithinInterval(enrDate, { start: startOfCurrentMonth, end: endOfCurrentMonth })) {
+                enrollmentsThisMonth++;
+            }
+        });
+    }
+
     const conversionRate = totalRegistrations > 0 ? (totalEnrollments / totalRegistrations) * 100 : 0;
     
     const enrollmentGoal = goals.find(g => g.type === 'Enrollments');
@@ -116,35 +142,20 @@ function DashboardContent() {
 
     const totalLeadsCount = leads.length;
     const newLeadsCount = leads.filter(l => l.status === 'new').length;
-    const registeredCandidatesCount = filteredCandidates.filter(c => c.status === 'Registered').length;
-
-    const enrollmentsThisMonth = candidates.filter(c => {
-      if (!c.enrollmentDate) return false;
-      const enrDate = safeParseDate(c.enrollmentDate);
-      return enrDate && isWithinInterval(enrDate, { start: startOfMonth(now), end: endOfMonth(now) });
-    }).length;
-
-    const holidayDatesArray = holidays.map(h => safeParseDate(h.date)).filter(Boolean) as Date[];
-    const isWorkingDay = (day: Date) => !isWeekend(day) && !holidayDatesArray.some(holiday => isSameDay(holiday, day));
 
     let workingDaysLeft = 0;
-    const today = startOfToday();
     if (endDate && isAfter(endDate, today)) {
         const remainingDays = eachDayOfInterval({ start: today, end: endDate });
         workingDaysLeft = remainingDays.filter(isWorkingDay).length;
     }
     
-    const enrollmentsGoalValue = goals.find(g => g.type === 'Enrollments')?.target || 0;
-    
     let monthlyGoalAverages = { enrollments: 0 };
     let monthlyAchievedAverages = { enrollments: 0 };
     let monthlyEnrollmentPerformance = 0;
 
-    if (startDate && endDate && goals.length > 0 && isAfter(endDate, startDate)) {
+    if (startDate && endDate && enrollmentTarget > 0 && isAfter(endDate, startDate)) {
       const totalMonthsInPeriod = differenceInMonths(endDate, startDate) + 1;
-      monthlyGoalAverages = {
-        enrollments: Math.ceil(enrollmentsGoalValue / totalMonthsInPeriod),
-      };
+      monthlyGoalAverages.enrollments = Math.ceil(enrollmentTarget / totalMonthsInPeriod);
 
       const calculationEndDate = isAfter(now, endDate) ? endDate : (isAfter(startDate, now) ? startDate : now);
       const monthsPassed = isAfter(calculationEndDate, startDate) ? differenceInMonths(calculationEndDate, startDate) + 1 : 1;

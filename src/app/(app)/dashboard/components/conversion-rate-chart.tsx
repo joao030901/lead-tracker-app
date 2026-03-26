@@ -34,32 +34,47 @@ export function ConversionRateChart() {
     if (!startDate || !endDate || startDate > endDate) return [];
 
     const months = eachMonthOfInterval({ start: startDate, end: endDate });
+    const statsMap = new Map<string, { regs: number, enrs: number }>();
+
+    // Inicializar mapa com os meses do intervalo
+    months.forEach(m => {
+        statsMap.set(format(m, 'yyyy-MM'), { regs: 0, enrs: 0 });
+    });
+
+    candidates.forEach(c => {
+        // Contar inscrições
+        const regDate = safeParseDate(c.registrationDate);
+        if (regDate) {
+            const regMonthKey = format(regDate, 'yyyy-MM');
+            if (statsMap.has(regMonthKey)) {
+                statsMap.get(regMonthKey)!.regs++;
+            }
+        }
+
+        // Contar matrículas
+        if (c.enrollmentDate && (c.status === 'Enrolled' || c.status === 'Engaged' || (c.status === 'Canceled' && c.enrollmentDate))) {
+            const enrDate = safeParseDate(c.enrollmentDate);
+            if (enrDate) {
+                const enrMonthKey = format(enrDate, 'yyyy-MM');
+                if (statsMap.has(enrMonthKey)) {
+                    statsMap.get(enrMonthKey)!.enrs++;
+                }
+            }
+        }
+    });
 
     return months.map(monthStart => {
-      const monthEnd = endOfMonth(monthStart);
+      const monthKey = format(monthStart, 'yyyy-MM');
+      const stats = statsMap.get(monthKey) || { regs: 0, enrs: 0 };
       const monthName = format(monthStart, 'MMMM', { locale: ptBR });
-
-      const registrationsInMonth = candidates.filter(c => {
-        const regDate = safeParseDate(c.registrationDate);
-        return regDate && isWithinInterval(regDate, { start: monthStart, end: monthEnd });
-      }).length;
-
-      const enrollmentsInMonth = candidates.filter(c => {
-        if (!c.enrollmentDate) return false;
-        if (c.status !== 'Enrolled' && c.status !== 'Engaged' && !(c.status === 'Canceled' && c.enrollmentDate)) return false;
-        const enrDate = safeParseDate(c.enrollmentDate);
-        return enrDate && isWithinInterval(enrDate, { start: monthStart, end: monthEnd });
-      }).length;
       
-      const rate = registrationsInMonth > 0
-        ? (enrollmentsInMonth / registrationsInMonth) * 100
-        : 0;
+      const rate = stats.regs > 0 ? (stats.enrs / stats.regs) * 100 : 0;
 
       return {
         month: monthName.charAt(0).toUpperCase() + monthName.slice(1),
         rate: parseFloat(rate.toFixed(1)),
-        regs: registrationsInMonth,
-        enrs: enrollmentsInMonth,
+        regs: stats.regs,
+        enrs: stats.enrs,
       };
     });
   }, [candidates, startDate, endDate]);

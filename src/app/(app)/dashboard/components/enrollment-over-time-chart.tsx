@@ -85,7 +85,7 @@ function MonthPicker({
       <div className="grid grid-cols-4 gap-1.5">
         {Array.from({ length: 12 }).map((_, i) => {
           const monthDate = setYear(setMonth(new Date(), i), currentYear);
-          const isDisabled = (fromDate && monthDate < startOfMonth(fromDate)) || (toDate && monthDate > endOfMonth(toDate));
+          const isDisabled = !!((fromDate && monthDate < startOfMonth(fromDate)) || (toDate && monthDate > endOfMonth(toDate)));
           return (
             <Button
               key={i}
@@ -115,12 +115,11 @@ export function EnrollmentOverTimeChart() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   
-  const holidayDates = useMemo(() => holidays.map(h => safeParseDate(h.date)?.setHours(0, 0, 0, 0)).filter(Boolean) as number[], [holidays]);
-  const isWorkingDay = (day: Date): boolean => {
+  const holidayTimestamps = useMemo(() => new Set(holidays.map(h => safeParseDate(h.date)?.setHours(0, 0, 0, 0)).filter(Boolean) as number[]), [holidays]);
+  const isWorkingDay = useMemo(() => (day: Date): boolean => {
       if (isWeekend(day)) return false;
-      const dayTime = day.getTime();
-      return !holidayDates.some(holidayTime => holidayTime === dayTime);
-  }
+      return !holidayTimestamps.has(day.setHours(0, 0, 0, 0));
+  }, [holidayTimestamps]);
 
   const chartData = useMemo(() => {
     const enrollmentsGoal = goals.find(g => g.type === 'Enrollments');
@@ -142,7 +141,12 @@ export function EnrollmentOverTimeChart() {
         }
     }
     
-    let interval;
+    // Preparar candidatos para evitar loops aninhados pesados
+    const enrolledCandidates = candidates
+      .filter(c => c.enrollmentDate && (c.status === 'Enrolled' || c.status === 'Engaged' || (c.status === 'Canceled' && c.enrollmentDate)))
+      .map(c => ({ ...c, parsedEnrDate: safeParseDate(c.enrollmentDate!) }));
+
+    let interval: Date[];
     let formatLabel: (date: Date) => string;
     let getPeriodInterval: (date: Date) => { start: Date, end: Date };
 
@@ -166,26 +170,20 @@ export function EnrollmentOverTimeChart() {
     }
 
     let remainingGoal = enrollmentsGoal.target;
-    let remainingWorkingDays = eachDayOfInterval({ start: startDate, end: endDate }).filter(isWorkingDay).length;
+    let remainingWorkingDays = 0;
     
-    if (viewStartDate > startDate) {
-        const prePeriodEnd = addDays(viewStartDate, -1);
-        if (prePeriodEnd >= startDate) {
-            const prePeriodDays = eachDayOfInterval({ start: startDate, end: prePeriodEnd });
-            prePeriodDays.forEach(day => {
-                const enrollmentsOnDay = candidates.filter(c => {
-                    if (!c.enrollmentDate) return false;
-                    if (c.status !== 'Enrolled' && c.status !== 'Engaged' && !(c.status === 'Canceled' && c.enrollmentDate)) return false;
-                    const enrDate = safeParseDate(c.enrollmentDate);
-                    return enrDate && isSameDay(enrDate, day);
-                }).length;
-                remainingGoal -= enrollmentsOnDay;
-                if (isWorkingDay(day)) {
-                    remainingWorkingDays--;
-                }
-            });
+    // Cálculo inicial de dias úteis e meta abatida antes do período visível
+    const allDays = eachDayOfInterval({ start: startDate, end: endDate });
+    allDays.forEach(day => {
+        const isWorking = isWorkingDay(day);
+        if (isWorking) remainingWorkingDays++;
+
+        if (day < viewStartDate) {
+            const enrollmentsOnDay = enrolledCandidates.filter(c => c.parsedEnrDate && isSameDay(c.parsedEnrDate, day)).length;
+            remainingGoal -= enrollmentsOnDay;
+            if (isWorking) remainingWorkingDays--;
         }
-    }
+    });
 
     if(remainingWorkingDays <= 0 && interval.length > 1) return [];
     
@@ -200,12 +198,9 @@ export function EnrollmentOverTimeChart() {
         const dailyGoal = remainingWorkingDays > 0 ? remainingGoal / remainingWorkingDays : 0;
         const target = Math.max(0, dailyGoal * workingDaysInPeriod);
 
-        const enrollments = candidates.filter(c => {
-          if (!c.enrollmentDate) return false;
-          if (c.status !== 'Enrolled' && c.status !== 'Engaged' && !(c.status === 'Canceled' && c.enrollmentDate)) return false;
-          const enrDate = safeParseDate(c.enrollmentDate);
-          return enrDate && isWithinInterval(enrDate, {start: actualPeriodStart, end: actualPeriodEnd});
-        }).length;
+        const enrollments = enrolledCandidates.filter(c => 
+          c.parsedEnrDate && isWithinInterval(c.parsedEnrDate, {start: actualPeriodStart, end: actualPeriodEnd})
+        ).length;
         
         remainingGoal -= enrollments;
         remainingWorkingDays -= workingDaysInPeriod;
@@ -291,7 +286,7 @@ export function EnrollmentOverTimeChart() {
                             initialFocus
                             locale={ptBR}
                             showWeekNumber={view === 'week'}
-                            onWeekNumberClick={(weekNumber, week) => {
+                            onWeekNumberClick={(weekNumber: number, week: Date[]) => {
                                 if (view === 'week') {
                                     handleSetSelectedDate(week[0]);
                                 }
