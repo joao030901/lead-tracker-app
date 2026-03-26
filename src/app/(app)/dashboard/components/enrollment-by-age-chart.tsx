@@ -19,7 +19,7 @@ import { isWithinInterval, differenceInYears } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { safeParseDate } from '@/lib/utils';
 
-const ageRangesOrder = ['Menor que 18', '18-24 anos', '25-34 anos', '35-44 anos', '45-54 anos', '55+ anos'];
+const ageRangesOrder = ['Menor que 18', '18-24 anos', '25-34 anos', '35-44 anos', '45-54 anos', '55+ anos', 'Não informada'];
 
 const chartConfig = {
   "age-under-18": { label: 'Menor que 18', color: 'hsl(var(--chart-4))' },
@@ -28,11 +28,14 @@ const chartConfig = {
   "age-35-44": { label: '35-44 anos', color: 'hsl(var(--chart-3))' },
   "age-45-54": { label: '45-54 anos', color: 'hsl(var(--chart-5))' },
   "age-55-plus": { label: '55+ anos', color: 'hsl(var(--destructive))' },
+  "age-unknown": { label: 'Não informada', color: 'hsl(var(--muted-foreground))' },
 };
 
 
-const getAgeRange = (birthDate: Date): string => {
+const getAgeRange = (birthDate: Date | null): string => {
+    if (!birthDate) return 'Não informada';
     const age = differenceInYears(new Date(), birthDate);
+    if (isNaN(age) || age < 0 || age > 120) return 'Não informada';
     if (age <= 17) return 'Menor que 18';
     if (age >= 18 && age <= 24) return '18-24 anos';
     if (age >= 25 && age <= 34) return '25-34 anos';
@@ -48,6 +51,7 @@ const ageRangeToKey = (ageRange: string): string => {
   if (ageRange === '35-44 anos') return 'age-35-44';
   if (ageRange === '45-54 anos') return 'age-45-54';
   if (ageRange === '55+ anos') return 'age-55-plus';
+  if (ageRange === 'Não informada') return 'age-unknown';
   return ageRange.toLowerCase().replace(/[^a-z0-9]/g, '-');
 };
 
@@ -73,10 +77,8 @@ export function EnrollmentByAgeChart() {
 
     dataCandidates.forEach(candidate => {
       const birthDate = safeParseDate(candidate.birthDate);
-      if (birthDate) {
-        const ageRange = getAgeRange(birthDate);
-        ageData[ageRange] = (ageData[ageRange] || 0) + 1;
-      }
+      const ageRange = getAgeRange(birthDate);
+      ageData[ageRange] = (ageData[ageRange] || 0) + 1;
     });
     
     return Object.keys(ageData).map(ageRange => {
