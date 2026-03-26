@@ -127,8 +127,9 @@ export function FunnelChart() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 p-4 flex items-center justify-center overflow-hidden">
+        <div className="w-full max-w-[450px] mx-auto h-full flex items-center justify-center">
         <ChartContainer config={chartConfig} className="h-full w-full min-h-[300px]">
-            <RechartsFunnelChart margin={{ top: 20, right: 120, left: 20, bottom: 20 }}>
+            <RechartsFunnelChart margin={{ top: 20, right: 100, left: 20, bottom: 20 }}>
                 <Tooltip
                     cursor={false}
                     content={({ active, payload }) => {
@@ -169,6 +170,7 @@ export function FunnelChart() {
                 </Funnel>
             </RechartsFunnelChart>
         </ChartContainer>
+        </div>
       </CardContent>
     </Card>
   );
