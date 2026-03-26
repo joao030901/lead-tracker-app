@@ -24,7 +24,7 @@ import {
   isWeekend,
 } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { useAcademicPeriod } from "@/context/academic-period-context"
+import { useDashboardFilter } from "@/context/dashboard-filter-context"
 import { useMemo } from "react"
 import { useGoals } from "@/context/goals-context"
 import { useHolidays } from "@/context/holidays-context"
@@ -44,7 +44,7 @@ const chartConfig = {
 export function MonthlyGoalsChart() {
   const { candidates } = useCandidates()
   const { goals } = useGoals()
-  const { startDate, endDate } = useAcademicPeriod()
+  const { startDate, endDate } = useDashboardFilter()
   const { holidays } = useHolidays()
 
   const chartData = useMemo(() => {

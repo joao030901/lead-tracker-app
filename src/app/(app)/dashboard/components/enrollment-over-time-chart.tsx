@@ -20,7 +20,7 @@ import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, XIcon } from 'lucide-react';
 import { useCandidates } from '@/context/candidates-context';
-import { useAcademicPeriod } from '@/context/academic-period-context';
+import { useDashboardFilter } from '@/context/dashboard-filter-context';
 import { useGoals } from '@/context/goals-context';
 import { useHolidays } from '@/context/holidays-context';
 import { 
@@ -108,7 +108,7 @@ function MonthPicker({
 
 export function EnrollmentOverTimeChart() {
   const { candidates } = useCandidates();
-  const { startDate, endDate } = useAcademicPeriod();
+  const { startDate, endDate } = useDashboardFilter();
   const { goals } = useGoals();
   const { holidays } = useHolidays();
   const [view, setView] = useState<View>('month');

@@ -14,7 +14,7 @@ import {
   ChartTooltip,
 } from '@/components/ui/chart';
 import { useCandidates } from '@/context/candidates-context';
-import { useAcademicPeriod } from '@/context/academic-period-context';
+import { useDashboardFilter } from '@/context/dashboard-filter-context';
 import { isWithinInterval } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { safeParseDate } from '@/lib/utils';
@@ -28,7 +28,7 @@ const chartConfig = {
 
 export function EnrollmentByEntryMethodChart() {
   const { candidates } = useCandidates();
-  const { startDate, endDate } = useAcademicPeriod();
+  const { startDate, endDate } = useDashboardFilter();
   const [dataType, setDataType] = useState<'enrollments' | 'registrations' | 'engaged'>('enrollments');
 
   const chartData = useMemo(() => {

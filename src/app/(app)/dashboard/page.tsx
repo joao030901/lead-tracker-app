@@ -17,7 +17,8 @@ import {
   startOfToday, startOfMonth, endOfMonth, isSameDay 
 } from 'date-fns';
 import { SpecialistRankingChart } from './components/specialist-ranking-chart';
-import { useAcademicPeriod } from '@/context/academic-period-context';
+import { useDashboardFilter, DashboardFilterProvider } from '@/context/dashboard-filter-context';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { useGoals } from '@/context/goals-context';
 import { MonthlyGoalsChart } from './components/monthly-goals-chart';
 import { useHolidays } from '@/context/holidays-context';
@@ -29,6 +30,7 @@ import { EnrollmentOverTimeChart } from './components/enrollment-over-time-chart
 import { EnrollmentByEntryMethodChart } from './components/enrollment-by-entry-method-chart';
 import { useLeads } from '@/context/leads-context';
 import { EngagementMonthlyGoalsChart } from './components/engagement-monthly-goals-chart';
+import { FunnelChart } from './components/funnel-chart';
 import { Button } from '@/components/ui/button';
 import { safeParseDate } from '@/lib/utils';
 
@@ -42,15 +44,16 @@ const CARD_IDS = [
   'entry-method',
   'age-distribution',
   'city-performance',
-  'course-performance'
+  'course-performance',
+  'funnel-chart'
 ];
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { candidates } = useCandidates();
   const { leads } = useLeads();
   const { goals } = useGoals();
   const { holidays } = useHolidays();
-  const { startDate, endDate } = useAcademicPeriod();
+  const { startDate, endDate, dateRange, setDateRange } = useDashboardFilter();
   
   const [cardOrder, setCardOrder] = useState<string[]>(CARD_IDS);
 
@@ -202,19 +205,25 @@ export default function DashboardPage() {
       case 'age-distribution': return wrap(<EnrollmentByAgeChart />);
       case 'city-performance': return wrap(<PerformanceByCityChart />);
       case 'course-performance': return wrap(<CoursePerformanceChart />);
+      case 'funnel-chart': return wrap(<FunnelChart />);
       default: return null;
     }
   };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full max-w-[1600px] mx-auto">
-      <header className="mb-6">
-        <h1 className="text-4xl font-headline font-bold tracking-tight text-primary">
-          Dashboard Geral
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          Análise de desempenho comercial em tempo real.
-        </p>
+      <header className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-4xl font-headline font-bold tracking-tight text-primary">
+            Dashboard Geral
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Análise de desempenho comercial em tempo real.
+          </p>
+        </div>
+        <div className="w-full sm:w-auto min-w-[260px]">
+          <DateRangePicker date={dateRange} onSelect={setDateRange} />
+        </div>
       </header>
 
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
@@ -283,5 +292,13 @@ export default function DashboardPage() {
         {cardOrder.map((id, index) => renderInteractiveCard(id, index))}
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <DashboardFilterProvider>
+      <DashboardContent />
+    </DashboardFilterProvider>
   );
 }

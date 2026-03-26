@@ -17,7 +17,7 @@ import {
 import { useCandidates } from '@/context/candidates-context';
 import { eachMonthOfInterval, endOfMonth, format, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useAcademicPeriod } from '@/context/academic-period-context';
+import { useDashboardFilter } from '@/context/dashboard-filter-context';
 import { useMemo } from 'react';
 import { safeParseDate } from '@/lib/utils';
 
@@ -35,7 +35,7 @@ const chartConfig = {
 
 export function EnrollmentChart() {
   const { candidates } = useCandidates();
-  const { startDate, endDate } = useAcademicPeriod();
+  const { startDate, endDate } = useDashboardFilter();
 
   const chartData = useMemo(() => {
     if (!startDate || !endDate || startDate > endDate) return [];

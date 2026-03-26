@@ -17,7 +17,7 @@ import {
 import { useCandidates } from '@/context/candidates-context';
 import { useSpecialists } from '@/context/specialists-context';
 import { useMemo } from 'react';
-import { useAcademicPeriod } from '@/context/academic-period-context';
+import { useDashboardFilter } from '@/context/dashboard-filter-context';
 import { isWithinInterval } from 'date-fns';
 import { safeParseDate, cn } from '@/lib/utils';
 
@@ -35,7 +35,7 @@ const chartConfig = {
 export function SpecialistRankingChart() {
   const { candidates } = useCandidates();
   const { specialists } = useSpecialists();
-  const { startDate, endDate } = useAcademicPeriod();
+  const { startDate, endDate } = useDashboardFilter();
 
   const { chartData, teamContributionPercentage } = useMemo(() => {
     if (!startDate || !endDate) return { chartData: [], teamContributionPercentage: 0 };

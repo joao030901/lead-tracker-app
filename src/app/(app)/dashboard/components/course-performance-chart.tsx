@@ -16,7 +16,7 @@ import {
   ChartLegendContent,
 } from '@/components/ui/chart';
 import { useCandidates } from '@/context/candidates-context';
-import { useAcademicPeriod } from '@/context/academic-period-context';
+import { useDashboardFilter } from '@/context/dashboard-filter-context';
 import { isWithinInterval } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -45,7 +45,7 @@ const formatCourseName = (course: string) => {
 
 export function CoursePerformanceChart() {
   const { candidates } = useCandidates();
-  const { startDate, endDate } = useAcademicPeriod();
+  const { startDate, endDate } = useDashboardFilter();
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
 

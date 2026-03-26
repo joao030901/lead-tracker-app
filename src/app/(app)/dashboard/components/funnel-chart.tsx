@@ -12,8 +12,8 @@ import {
 import {
   ChartContainer,
 } from '@/components/ui/chart';
+import { useDashboardFilter } from '@/context/dashboard-filter-context';
 import { useCandidates } from '@/context/candidates-context';
-import { useAcademicPeriod } from '@/context/academic-period-context';
 import { isWithinInterval } from 'date-fns';
 import { safeParseDate } from '@/lib/utils';
 
@@ -38,7 +38,7 @@ const chartConfig = {
 
 export function FunnelChart() {
   const { candidates } = useCandidates();
-  const { startDate, endDate } = useAcademicPeriod();
+  const { startDate, endDate } = useDashboardFilter();
 
   const { chartData, totalCanceled } = useMemo(() => {
     if (!startDate || !endDate) return { chartData: [], totalCanceled: 0 };
