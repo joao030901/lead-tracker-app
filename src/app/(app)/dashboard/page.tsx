@@ -18,7 +18,6 @@ import {
 } from 'date-fns';
 import { SpecialistRankingChart } from './components/specialist-ranking-chart';
 import { useDashboardFilter, DashboardFilterProvider } from '@/context/dashboard-filter-context';
-import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { useGoals } from '@/context/goals-context';
 import { MonthlyGoalsChart } from './components/monthly-goals-chart';
 import { useHolidays } from '@/context/holidays-context';
@@ -51,7 +50,7 @@ function DashboardContent() {
   const { leads } = useLeads();
   const { goals } = useGoals();
   const { holidays } = useHolidays();
-  const { startDate, endDate, dateRange, setDateRange } = useDashboardFilter();
+  const { startDate, endDate } = useDashboardFilter();
   
   const [cardOrder, setCardOrder] = useState<string[]>(CARD_IDS);
 
@@ -209,18 +208,13 @@ function DashboardContent() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full max-w-[1600px] mx-auto">
-      <header className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-4xl font-headline font-bold tracking-tight text-primary">
-            Dashboard Geral
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Análise de desempenho comercial em tempo real.
-          </p>
-        </div>
-        <div className="w-full sm:w-auto min-w-[260px]">
-          <DateRangePicker date={dateRange} onSelect={setDateRange} />
-        </div>
+      <header className="mb-6">
+        <h1 className="text-4xl font-headline font-bold tracking-tight text-primary">
+          Dashboard Geral
+        </h1>
+        <p className="text-muted-foreground text-lg">
+          Análise de desempenho comercial em tempo real.
+        </p>
       </header>
 
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
