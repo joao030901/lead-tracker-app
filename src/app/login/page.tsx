@@ -108,7 +108,7 @@ export default function LoginPage() {
       </Card>
       
       <div className="absolute bottom-8 text-center w-full text-sm text-muted-foreground/50">
-        &copy; 2024 LeadsUni Management Platform
+        &copy; 2026 Plataforma de Gestão LeadsUni
       </div>
     </div>
   );
