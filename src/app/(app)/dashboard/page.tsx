@@ -30,7 +30,6 @@ import { EnrollmentOverTimeChart } from './components/enrollment-over-time-chart
 import { EnrollmentByEntryMethodChart } from './components/enrollment-by-entry-method-chart';
 import { useLeads } from '@/context/leads-context';
 import { EngagementMonthlyGoalsChart } from './components/engagement-monthly-goals-chart';
-import { FunnelChart } from './components/funnel-chart';
 import { Button } from '@/components/ui/button';
 import { safeParseDate } from '@/lib/utils';
 
@@ -44,8 +43,7 @@ const CARD_IDS = [
   'entry-method',
   'age-distribution',
   'city-performance',
-  'course-performance',
-  'funnel-chart'
+  'course-performance'
 ];
 
 function DashboardContent() {
@@ -205,7 +203,6 @@ function DashboardContent() {
       case 'age-distribution': return wrap(<EnrollmentByAgeChart />);
       case 'city-performance': return wrap(<PerformanceByCityChart />);
       case 'course-performance': return wrap(<CoursePerformanceChart />);
-      case 'funnel-chart': return wrap(<FunnelChart />);
       default: return null;
     }
   };
