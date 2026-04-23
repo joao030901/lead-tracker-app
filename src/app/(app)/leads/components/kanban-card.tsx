@@ -2,7 +2,7 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Lead } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { cn, safeParseDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, Book, GripVertical } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -36,6 +36,8 @@ export function KanbanCard({ lead, onWhatsAppClick, onClick }: KanbanCardProps) 
     discarded: 'border-rose-500/30 bg-rose-500/5',
   };
 
+  const parsedDate = lead.createdAt ? safeParseDate(lead.createdAt) : null;
+
   return (
     <div
       ref={setNodeRef}
@@ -56,9 +58,9 @@ export function KanbanCard({ lead, onWhatsAppClick, onClick }: KanbanCardProps) 
             <h4 className="font-bold text-sm tracking-tight text-foreground truncate pr-2">
               {lead.name}
             </h4>
-            {lead.createdAt && (
+            {parsedDate && (
                 <span className="text-[10px] font-semibold text-muted-foreground/80 shrink-0">
-                    {formatDistanceToNow(new Date(lead.createdAt), { addSuffix: false, locale: ptBR })}
+                    {formatDistanceToNow(parsedDate, { addSuffix: false, locale: ptBR })}
                 </span>
             )}
           </div>

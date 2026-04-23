@@ -126,13 +126,17 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                                             <CandidatesProvider initialData={candidates}>
                                                     <GoalsProvider initialData={goals}>
                                                         <PaidBonusesProvider initialData={paidBonuses}>
-                                                            <div className="flex min-h-screen bg-muted/40">
+                                                            <div className="flex bg-background relative overflow-hidden" style={{ height: '100dvh' }}>
+                                                                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/20 blur-[140px] rounded-full pointer-events-none z-0" />
+                                                                <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-blue-500/15 blur-[120px] rounded-full pointer-events-none z-0" />
                                                                 <AppSidebar />
-                                                                <div className="flex flex-col flex-1">
+                                                                <div className="flex flex-col flex-1 min-w-0">
                                                                     <Header />
-                                                                    <main className="flex-1 flex flex-col">
-                                                                        {children}
-                                                                    </main>
+                                                                    <div className="flex-1 flex flex-col overflow-y-auto pb-4">
+                                                                        <main className="flex-1 flex flex-col">
+                                                                            {children}
+                                                                        </main>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </PaidBonusesProvider>

@@ -53,23 +53,28 @@ export function SpecialistRankingChart() {
     if (totalEnrollments === 0) return { chartData: [], teamContributionPercentage: 0 };
 
     let teamEnrollments = 0;
+    
+    // Otimização: Pre-calcular agrupamento em O(N) para evitar O(Especialistas * Candidatos)
+    const specialistStats = new Map<string, { enrollments: number, engaged: number }>();
+    periodCandidates.forEach(c => {
+        if (c.specialist) {
+            const stats = specialistStats.get(c.specialist) || { enrollments: 0, engaged: 0 };
+            stats.enrollments++;
+            if (c.firstPaymentPaid === true) stats.engaged++;
+            specialistStats.set(c.specialist, stats);
+        }
+    });
 
     const performance = specialists.map(specialist => {
-      const enrollmentsBySpecialist = periodCandidates.filter(
-        c => c.specialist === specialist.name
-      );
+      const stats = specialistStats.get(specialist.name) || { enrollments: 0, engaged: 0 };
       
-      const engagedEnrollmentsBySpecialist = periodCandidates.filter(
-        c => c.specialist === specialist.name && c.firstPaymentPaid === true
-      );
-
-      teamEnrollments += enrollmentsBySpecialist.length;
+      teamEnrollments += stats.enrollments;
 
       return {
         name: specialist.name.split(' ')[0],
         fullName: specialist.name,
-        enrollments: enrollmentsBySpecialist.length,
-        engaged: engagedEnrollmentsBySpecialist.length,
+        enrollments: stats.enrollments,
+        engaged: stats.engaged,
       };
     });
 

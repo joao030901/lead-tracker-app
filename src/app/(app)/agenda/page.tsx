@@ -164,22 +164,27 @@ export default function AgendaPage() {
       } catch { return false; }
     }).length;
     
-    // Proportional target calculation
     let remainingGoal = enrollmentsGoal.target;
     let remainingWorkingDays = totalWorkingDaysInPeriod;
     
+    // Otimização: Agrupar matrículas por data em O(N) ao invés de rodar filter() a cada dia O(N*D)
+    const enrollmentsCountByDate = new Map<string, number>();
+    candidates.forEach(c => {
+        if (c.enrollmentDate && (c.status === 'Enrolled' || c.status === 'Engaged' || (c.status === 'Canceled' && c.enrollmentDate))) {
+            try {
+                const dateKey = format(parseISO(c.enrollmentDate), 'yyyy-MM-dd');
+                enrollmentsCountByDate.set(dateKey, (enrollmentsCountByDate.get(dateKey) || 0) + 1);
+            } catch {}
+        }
+    });
+
     const preViewPeriodEnd = addDays(viewStartDate, -1);
 
     if (preViewPeriodEnd >= startDate) {
       const preViewDays = eachDayOfInterval({ start: startDate, end: preViewPeriodEnd });
       preViewDays.forEach(day => {
-        const achievedOnDay = candidates.filter(c => {
-            if (!c.enrollmentDate) return false;
-            if (c.status !== 'Enrolled' && c.status !== 'Engaged' && !(c.status === 'Canceled' && c.enrollmentDate)) return false;
-            try {
-                return isSameDay(parseISO(c.enrollmentDate), day);
-            } catch { return false; }
-        }).length;
+        const dayKey = format(day, 'yyyy-MM-dd');
+        const achievedOnDay = enrollmentsCountByDate.get(dayKey) || 0;
         remainingGoal -= achievedOnDay;
         if(isWorkingDay(day)) remainingWorkingDays--;
       });

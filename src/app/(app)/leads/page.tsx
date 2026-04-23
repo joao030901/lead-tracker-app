@@ -421,10 +421,10 @@ function LeadsPageContent() {
                         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                             <div className="xl:col-span-2 overflow-x-auto"><DataTable columns={columns(setLeadToConvert)} data={filteredLeads} onRowClick={handleRowClick} rowSelection={rowSelection} setRowSelection={setRowSelection} /></div>
                             <div className="hidden xl:block"><div className="sticky top-8 h-[calc(100vh-140px)]"><ScrollArea className="h-full pr-4">{selectedLead ? (<LeadPreviewContent lead={selectedLead} onConvertClick={setLeadToConvert} handleCopy={handleCopy} />) : (<Card className="h-full border-dashed flex flex-col items-center justify-center py-12 text-center text-sm min-h-[500px]"><Contact className="h-16 w-16 text-muted-foreground/20 mb-4" /><h3 className="font-bold text-muted-foreground">Selecione um Lead</h3></Card>)}</ScrollArea></div></div>
-                            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}><SheetContent className="w-full sm:max-w-md p-0 flex flex-col" aria-describedby={undefined}><SheetHeader className="p-6 border-b"><SheetTitle>Detalhes do Lead</SheetTitle></SheetHeader><ScrollArea className="flex-1 p-6">{selectedLead && (<LeadPreviewContent lead={selectedLead} onConvertClick={setLeadToConvert} handleCopy={handleCopy} />)}</ScrollArea></SheetContent></Sheet>
                         </div>
                     </TabsContent>
                 </Tabs>
+                <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}><SheetContent className="w-full sm:max-w-md p-0 flex flex-col" aria-describedby={undefined}><SheetHeader className="p-6 border-b"><SheetTitle>Detalhes do Lead</SheetTitle></SheetHeader><ScrollArea className="flex-1 p-6">{selectedLead && (<LeadPreviewContent lead={selectedLead} onConvertClick={setLeadToConvert} handleCopy={handleCopy} />)}</ScrollArea></SheetContent></Sheet>
             </div>
         </div>
     );

@@ -98,16 +98,20 @@ export default function CalendarGrid({
 
         const dailyAverageGoal = Math.ceil(enrollmentsGoal.target / totalWorkingDaysInPeriod);
         
+        // Otimização: Agrupar matrículas por data para acesso em O(1)
+        const enrollmentsCountByDate = new Map<string, number>();
+        candidates.forEach(c => {
+            if (c.enrollmentDate && (c.status === 'Enrolled' || c.status === 'Engaged' || (c.status === 'Canceled' && c.enrollmentDate))) {
+                try {
+                   const dateKey = format(parseISO(c.enrollmentDate), 'yyyy-MM-dd');
+                   enrollmentsCountByDate.set(dateKey, (enrollmentsCountByDate.get(dateKey) || 0) + 1);
+                } catch {}
+            }
+        });
+        
         for (const day of periodDays) {
              const dayKey = format(day, 'yyyy-MM-dd');
-             const enrollmentsOnDay = candidates.filter(c => {
-                 if (!c.enrollmentDate) return false;
-                 if (c.status !== 'Enrolled' && c.status !== 'Engaged' && !(c.status === 'Canceled' && c.enrollmentDate)) return false;
-                 try {
-                    const enrollmentDate = parseISO(c.enrollmentDate);
-                    return isSameDay(enrollmentDate, day);
-                 } catch { return false; }
-            }).length;
+             const enrollmentsOnDay = enrollmentsCountByDate.get(dayKey) || 0;
 
             metrics[dayKey] = {
                 target: isWorkingDay(day) ? dailyAverageGoal : 0,
