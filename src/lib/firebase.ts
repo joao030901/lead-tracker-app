@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 
 // --- Client SDK Initialization (for Auth and Real-time) ---
 const firebaseConfig = {
@@ -16,4 +16,15 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 export const clientDb = getFirestore(app);
+
+if (typeof window !== 'undefined') {
+  enableIndexedDbPersistence(clientDb).catch((err) => {
+    if (err.code == 'failed-precondition') {
+      console.warn('Multiplas abas abertas, persistência ativada em apenas uma.');
+    } else if (err.code == 'unimplemented') {
+      console.warn('O navegador não suporta persistência offline.');
+    }
+  });
+}
+
 export { app };

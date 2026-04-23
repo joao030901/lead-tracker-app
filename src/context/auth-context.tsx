@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onIdTokenChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -19,12 +19,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onIdTokenChanged(auth, async (user) => {
       setUser(user);
       setLoading(false);
       
-      if (!user && pathname !== '/login') {
-        router.push('/login');
+      if (user) {
+        try {
+          const token = await user.getIdToken();
+          // Atualiza o cookie com o novo token, mantendo sincronizado com as Server Actions
+          document.cookie = `authToken=${token}; path=/; max-age=3600; secure`;
+        } catch (error) {
+          console.error("Erro ao obter token do usuário", error);
+        }
+      } else {
+        // Remove o cookie se o usuário não estiver autenticado
+        document.cookie = `authToken=; path=/; max-age=0; secure`;
+        if (pathname !== '/login') {
+          router.push('/login');
+        }
       }
     });
 

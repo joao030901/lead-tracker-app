@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
 import type { Candidate } from '@/lib/types';
-import { saveData } from '@/lib/actions';
+import { saveData, syncCollectionDiff } from '@/lib/actions';
 import { useLocation } from './location-context';
 import { doc, collection, onSnapshot } from 'firebase/firestore';
 import { clientDb } from '@/lib/firebase';
@@ -50,7 +50,14 @@ export const CandidatesProvider = ({ children, initialData }: { children: ReactN
   const setCandidatesAndSave: Dispatch<SetStateAction<Candidate[]>> = (value) => {
     if (!location) return;
     const newValue = typeof value === 'function' ? value(candidates) : value;
-    saveData('candidates', location, newValue, ['/candidates', '/dashboard', '/admin']);
+    
+    // Calculate the diff to avoid rewriting the entire collection and exhausting quota
+    const oldMap = new Map(candidates.map(c => [c.id, c]));
+    const toUpdate = newValue.filter(c => JSON.stringify(c) !== JSON.stringify(oldMap.get(c.id)));
+    const newIds = new Set(newValue.map(c => c.id));
+    const toDeleteIds = candidates.filter(c => !newIds.has(c.id)).map(c => c.id);
+
+    syncCollectionDiff(location, 'candidates', toUpdate, toDeleteIds, ['/candidates', '/dashboard', '/admin']);
   };
 
   return (

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
 import type { Lead } from '@/lib/types';
-import { saveData } from '@/lib/actions';
+import { saveData, syncCollectionDiff } from '@/lib/actions';
 import { useLocation } from './location-context';
 import { doc, collection, onSnapshot } from 'firebase/firestore';
 import { clientDb } from '@/lib/firebase';
@@ -45,8 +45,14 @@ export const LeadsProvider = ({ children, initialData }: { children: ReactNode, 
   const setLeadsAndSave: Dispatch<SetStateAction<Lead[]>> = (value) => {
     if (!location) return;
     const newValue = typeof value === 'function' ? value(leads) : value;
-    // We don't call setLeads here because onSnapshot will handle it
-    saveData('leads', location, newValue, ['/leads']);
+    
+    // Calculate the diff to avoid rewriting the entire collection and exhausting quota
+    const oldMap = new Map(leads.map(l => [l.id, l]));
+    const toUpdate = newValue.filter(l => JSON.stringify(l) !== JSON.stringify(oldMap.get(l.id)));
+    const newIds = new Set(newValue.map(l => l.id));
+    const toDeleteIds = leads.filter(l => !newIds.has(l.id)).map(l => l.id);
+
+    syncCollectionDiff(location, 'leads', toUpdate, toDeleteIds, ['/leads']);
   };
 
   return (

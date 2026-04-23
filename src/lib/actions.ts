@@ -56,6 +56,43 @@ async function saveToSubcollection(location: string, collectionName: string, dat
     await Promise.all(batches);
 }
 
+export async function syncCollectionDiff(location: string, collectionName: string, toSet: any[], toDeleteIds: string[], revalidatePaths: string[] = []) {
+    await verifyAuth();
+    if (!location) throw new Error("Location must be provided.");
+    const adminDb = requireDb();
+    const colRef = adminDb.collection('locations').doc(location).collection(collectionName);
+    
+    let batches = [];
+    let currentBatch = adminDb.batch();
+    let opCount = 0;
+
+    const commitBatch = () => {
+        batches.push(currentBatch.commit());
+        currentBatch = adminDb.batch();
+        opCount = 0;
+    };
+
+    for (const item of toSet) {
+        if (!item.id) continue;
+        currentBatch.set(colRef.doc(item.id), item);
+        opCount++;
+        if (opCount === 500) commitBatch();
+    }
+
+    for (const id of toDeleteIds) {
+        currentBatch.delete(colRef.doc(id));
+        opCount++;
+        if (opCount === 500) commitBatch();
+    }
+
+    if (opCount > 0) {
+        batches.push(currentBatch.commit());
+    }
+
+    await Promise.all(batches);
+    revalidatePaths.forEach(path => revalidatePath(path));
+}
+
 function requireDb() {
     if (!db) {
         throw new Error(

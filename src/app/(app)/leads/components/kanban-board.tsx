@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -38,6 +38,11 @@ export function KanbanBoard({ filteredLeads, onCardClick }: KanbanBoardProps) {
   const { setLeads } = useLeads();
   const { templates } = useTemplates();
   const [activeLead, setActiveLead] = useState<Lead | null>(null);
+  const [boardLeads, setBoardLeads] = useState<Lead[]>(filteredLeads);
+
+  useEffect(() => {
+    setBoardLeads(filteredLeads);
+  }, [filteredLeads]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -45,7 +50,6 @@ export function KanbanBoard({ filteredLeads, onCardClick }: KanbanBoardProps) {
   );
 
   const handleWhatsAppClick = (lead: Lead) => {
-      // Usar a primeira template padrão ou enviar mensagem genérica se não houver template.
       let message = `Olá, ${lead.name.split(' ')[0]}! Tudo bem? Vi que você demonstrou interesse corporativo... vamos conversar?`;
       if (templates.length > 0) {
           message = fillTemplate(templates[0].content, lead as any);
@@ -55,7 +59,7 @@ export function KanbanBoard({ filteredLeads, onCardClick }: KanbanBoardProps) {
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const lead = filteredLeads.find(l => l.id === active.id) || null;
+    const lead = boardLeads.find(l => l.id === active.id) || null;
     setActiveLead(lead);
   };
 
@@ -75,7 +79,7 @@ export function KanbanBoard({ filteredLeads, onCardClick }: KanbanBoardProps) {
 
     // Moving between columns
     if (isActiveALead && !isOverALead) {
-        setLeads((leads) => {
+        setBoardLeads((leads) => {
             const activeIndex = leads.findIndex((l) => l.id === activeId);
             const activeLead = leads[activeIndex];
             if (activeLead.status !== overId) {
@@ -89,7 +93,7 @@ export function KanbanBoard({ filteredLeads, onCardClick }: KanbanBoardProps) {
 
     // Moving vertically in same or different column over another lead
     if (isActiveALead && isOverALead) {
-        setLeads((leads) => {
+        setBoardLeads((leads) => {
             const activeIndex = leads.findIndex((l) => l.id === activeId);
             const overIndex = leads.findIndex((l) => l.id === overId);
             const activeLead = leads[activeIndex];
@@ -107,6 +111,26 @@ export function KanbanBoard({ filteredLeads, onCardClick }: KanbanBoardProps) {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (active && over) {
+        const activeLeadId = active.id;
+        const movedLead = boardLeads.find(l => l.id === activeLeadId);
+        const originalLead = filteredLeads.find(l => l.id === activeLeadId);
+        
+        if (movedLead && originalLead && movedLead.status !== originalLead.status) {
+            setLeads((allLeads) => {
+                const index = allLeads.findIndex(l => l.id === activeLeadId);
+                if (index !== -1) {
+                    const updated = [...allLeads];
+                    updated[index] = { ...updated[index], status: movedLead.status as Lead['status'] };
+                    return updated;
+                }
+                return allLeads;
+            });
+        }
+    }
+
     setActiveLead(null);
   };
 
@@ -129,7 +153,7 @@ export function KanbanBoard({ filteredLeads, onCardClick }: KanbanBoardProps) {
             id={col.id}
             title={col.title}
             accentColorClass={col.accent}
-            leads={filteredLeads.filter(l => l.status === col.id)}
+            leads={boardLeads.filter(l => l.status === col.id)}
             onWhatsAppClick={handleWhatsAppClick}
             onCardClick={onCardClick}
           />

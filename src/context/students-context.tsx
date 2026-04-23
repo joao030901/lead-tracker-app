@@ -3,8 +3,10 @@
 
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
 import type { Student } from '@/lib/types';
-import { saveData } from '@/lib/actions';
+import { saveData, syncCollectionDiff } from '@/lib/actions';
 import { useLocation } from './location-context';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { clientDb } from '@/lib/firebase';
 
 interface StudentsContextType {
   students: Student[];
@@ -16,9 +18,6 @@ interface StudentsContextType {
 }
 
 const StudentsContext = createContext<StudentsContextType | undefined>(undefined);
-
-import { collection, onSnapshot } from 'firebase/firestore';
-import { clientDb } from '@/lib/firebase';
 
 export const StudentsProvider = ({ children, initialData }: { children: ReactNode, initialData: Student[] }) => {
   const { location } = useLocation();
@@ -51,7 +50,14 @@ export const StudentsProvider = ({ children, initialData }: { children: ReactNod
   const setStudentsAndSave: Dispatch<SetStateAction<Student[]>> = (value) => {
     if (!location) return;
     const newValue = typeof value === 'function' ? value(students) : value;
-    saveData('students', location, newValue, ['/students']);
+    
+    // Calculate the diff to avoid rewriting the entire collection and exhausting quota
+    const oldMap = new Map(students.map(s => [s.id, s]));
+    const toUpdate = newValue.filter(s => JSON.stringify(s) !== JSON.stringify(oldMap.get(s.id)));
+    const newIds = new Set(newValue.map(s => s.id));
+    const toDeleteIds = students.filter(s => !newIds.has(s.id)).map(s => s.id);
+
+    syncCollectionDiff(location, 'students', toUpdate, toDeleteIds, ['/students']);
   };
 
   return (
