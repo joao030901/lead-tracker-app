@@ -5,7 +5,8 @@ import { db, admin } from './firebase-admin';
 import { cookies } from 'next/headers';
 
 async function verifyAuth() {
-    const token = cookies().get('authToken')?.value;
+    const cookieStore = await cookies();
+    const token = cookieStore.get('authToken')?.value;
     if (!token) throw new Error('Acesso não autorizado: Token ausente');
     try {
         await admin.auth().verifyIdToken(token);

@@ -7,6 +7,8 @@ import Papa from 'papaparse';
 import { useLeads } from '@/context/leads-context';
 import { useAuditLog } from '@/context/audit-log-context';
 import { useToast } from '@/hooks/use-toast';
+import { KanbanBoard } from './components/kanban-board';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { columns } from './components/columns';
 import { DataTable } from './components/data-table';
 import { Button } from '@/components/ui/button';
@@ -33,7 +35,9 @@ import {
   Fingerprint,
   Tag,
   Contact,
-  Download
+  Download,
+  LayoutGrid,
+  List
 } from 'lucide-react';
 import { Lead, Candidate } from '@/lib/types';
 import { useTemplates } from '@/context/templates-context';
@@ -384,29 +388,43 @@ function LeadsPageContent() {
                     </AccordionItem>
                 </Accordion>
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-                    <div><Badge variant="secondary" className="px-4 py-1.5 font-bold bg-primary/10 text-primary border-none">{filteredLeads.length} leads</Badge></div>
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                        {Object.keys(rowSelection).length > 0 && (
-                            <div className="flex items-center gap-2">
-                                <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" size="sm">Ações em Massa ({Object.keys(rowSelection).length}) <ChevronDown className="ml-2 h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => handleUpdateStatusForSelected('new')}>Novo</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleUpdateStatusForSelected('contacted')}>Contatado</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleUpdateStatusForSelected('discarded')}>Descartado</DropdownMenuItem>
-                                        <DropdownMenuSeparator /><AlertDialog><AlertDialogTrigger asChild><DropdownMenuItem onSelect={e => e.preventDefault()} className="text-destructive font-semibold">Excluir</DropdownMenuItem></AlertDialogTrigger><AlertDialogContent aria-describedby={undefined}><AlertDialogHeader><AlertDialogTitle>Excluir leads?</AlertDialogTitle></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleDeleteSelected} className="bg-destructive">Confirmar</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
-                                </DropdownMenuContent></DropdownMenu>
-                                <Button variant="ghost" size="sm" onClick={() => setRowSelection({})} className="text-muted-foreground hover:text-rose-500"><XCircle className="h-4 w-4" /></Button>
-                            </div>
-                        )}
-                        <Button variant="outline" size="sm" onClick={() => { const s: RowSelectionState = {}; filteredLeads.forEach((_, i) => s[i] = true); setRowSelection(s); }}><CheckSquare className="mr-2 h-4 w-4" /> Selecionar Tudo</Button>
+                <Tabs defaultValue="kanban" className="w-full">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                        <div className="flex items-center gap-4">
+                            <Badge variant="secondary" className="px-4 py-1.5 font-bold bg-primary/10 text-primary border-none">{filteredLeads.length} leads</Badge>
+                            <TabsList className="bg-card border shadow-sm">
+                                <TabsTrigger value="kanban" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><LayoutGrid className="h-4 w-4 mr-2" /> Kanban</TabsTrigger>
+                                <TabsTrigger value="table"><List className="h-4 w-4 mr-2" /> Lista</TabsTrigger>
+                            </TabsList>
+                        </div>
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            {Object.keys(rowSelection).length > 0 && (
+                                <div className="flex items-center gap-2">
+                                    <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" size="sm">Ações em Massa ({Object.keys(rowSelection).length}) <ChevronDown className="ml-2 h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={() => handleUpdateStatusForSelected('new')}>Novo</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleUpdateStatusForSelected('contacted')}>Contatado</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleUpdateStatusForSelected('discarded')}>Descartado</DropdownMenuItem>
+                                            <DropdownMenuSeparator /><AlertDialog><AlertDialogTrigger asChild><DropdownMenuItem onSelect={e => e.preventDefault()} className="text-destructive font-semibold">Excluir</DropdownMenuItem></AlertDialogTrigger><AlertDialogContent aria-describedby={undefined}><AlertDialogHeader><AlertDialogTitle>Excluir leads?</AlertDialogTitle></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleDeleteSelected} className="bg-destructive">Confirmar</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+                                    </DropdownMenuContent></DropdownMenu>
+                                    <Button variant="ghost" size="sm" onClick={() => setRowSelection({})} className="text-muted-foreground hover:text-rose-500"><XCircle className="h-4 w-4" /></Button>
+                                </div>
+                            )}
+                            <Button variant="outline" size="sm" onClick={() => { const s: RowSelectionState = {}; filteredLeads.forEach((_, i) => s[i] = true); setRowSelection(s); }}><CheckSquare className="mr-2 h-4 w-4" /> Selecionar Tudo</Button>
+                        </div>
                     </div>
-                </div>
 
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                    <div className="xl:col-span-2 overflow-x-auto"><DataTable columns={columns(setLeadToConvert)} data={filteredLeads} onRowClick={handleRowClick} rowSelection={rowSelection} setRowSelection={setRowSelection} /></div>
-                    <div className="hidden xl:block"><div className="sticky top-8 h-[calc(100vh-140px)]"><ScrollArea className="h-full pr-4">{selectedLead ? (<LeadPreviewContent lead={selectedLead} onConvertClick={setLeadToConvert} handleCopy={handleCopy} />) : (<Card className="h-full border-dashed flex flex-col items-center justify-center py-12 text-center text-sm min-h-[500px]"><Contact className="h-16 w-16 text-muted-foreground/20 mb-4" /><h3 className="font-bold text-muted-foreground">Selecione um Lead</h3></Card>)}</ScrollArea></div></div>
-                    <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}><SheetContent className="w-full sm:max-w-md p-0 flex flex-col" aria-describedby={undefined}><SheetHeader className="p-6 border-b"><SheetTitle>Detalhes do Lead</SheetTitle></SheetHeader><ScrollArea className="flex-1 p-6">{selectedLead && (<LeadPreviewContent lead={selectedLead} onConvertClick={setLeadToConvert} handleCopy={handleCopy} />)}</ScrollArea></SheetContent></Sheet>
-                </div>
+                    <TabsContent value="kanban" className="mt-0">
+                        <KanbanBoard filteredLeads={filteredLeads} onCardClick={(lead) => { setSelectedId(lead.id); setIsSheetOpen(true); }} />
+                    </TabsContent>
+
+                    <TabsContent value="table" className="mt-0">
+                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                            <div className="xl:col-span-2 overflow-x-auto"><DataTable columns={columns(setLeadToConvert)} data={filteredLeads} onRowClick={handleRowClick} rowSelection={rowSelection} setRowSelection={setRowSelection} /></div>
+                            <div className="hidden xl:block"><div className="sticky top-8 h-[calc(100vh-140px)]"><ScrollArea className="h-full pr-4">{selectedLead ? (<LeadPreviewContent lead={selectedLead} onConvertClick={setLeadToConvert} handleCopy={handleCopy} />) : (<Card className="h-full border-dashed flex flex-col items-center justify-center py-12 text-center text-sm min-h-[500px]"><Contact className="h-16 w-16 text-muted-foreground/20 mb-4" /><h3 className="font-bold text-muted-foreground">Selecione um Lead</h3></Card>)}</ScrollArea></div></div>
+                            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}><SheetContent className="w-full sm:max-w-md p-0 flex flex-col" aria-describedby={undefined}><SheetHeader className="p-6 border-b"><SheetTitle>Detalhes do Lead</SheetTitle></SheetHeader><ScrollArea className="flex-1 p-6">{selectedLead && (<LeadPreviewContent lead={selectedLead} onConvertClick={setLeadToConvert} handleCopy={handleCopy} />)}</ScrollArea></SheetContent></Sheet>
+                        </div>
+                    </TabsContent>
+                </Tabs>
             </div>
         </div>
     );
