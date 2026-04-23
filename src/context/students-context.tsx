@@ -17,7 +17,7 @@ interface StudentsContextType {
 
 const StudentsContext = createContext<StudentsContextType | undefined>(undefined);
 
-import { doc, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { clientDb } from '@/lib/firebase';
 
 export const StudentsProvider = ({ children, initialData }: { children: ReactNode, initialData: Student[] }) => {
@@ -39,12 +39,10 @@ export const StudentsProvider = ({ children, initialData }: { children: ReactNod
   useEffect(() => {
     if (!location) return;
 
-    const docRef = doc(clientDb, 'locations', location, 'data', 'students.json');
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data().content as Student[];
-        setStudents(data);
-      }
+    const colRef = collection(clientDb, 'locations', location, 'students');
+    const unsubscribe = onSnapshot(colRef, (snapshot) => {
+      const data = snapshot.docs.map(doc => doc.data() as Student);
+      setStudents(data);
     });
 
     return () => unsubscribe();
