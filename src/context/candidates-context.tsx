@@ -4,7 +4,7 @@ import { createContext, useContext, useState, ReactNode, Dispatch, SetStateActio
 import type { Candidate } from '@/lib/types';
 import { saveData } from '@/lib/actions';
 import { useLocation } from './location-context';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, collection, onSnapshot } from 'firebase/firestore';
 import { clientDb } from '@/lib/firebase';
 
 interface CandidatesContextType {
@@ -38,12 +38,10 @@ export const CandidatesProvider = ({ children, initialData }: { children: ReactN
   useEffect(() => {
     if (!location) return;
 
-    const docRef = doc(clientDb, 'locations', location, 'data', 'candidates.json');
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data().content as Candidate[];
+    const colRef = collection(clientDb, 'locations', location, 'candidates');
+    const unsubscribe = onSnapshot(colRef, (snapshot) => {
+        const data = snapshot.docs.map(doc => doc.data() as Candidate);
         setCandidates(data);
-      }
     });
 
     return () => unsubscribe();

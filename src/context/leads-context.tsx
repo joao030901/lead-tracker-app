@@ -4,7 +4,7 @@ import { createContext, useContext, useState, ReactNode, Dispatch, SetStateActio
 import type { Lead } from '@/lib/types';
 import { saveData } from '@/lib/actions';
 import { useLocation } from './location-context';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, collection, onSnapshot } from 'firebase/firestore';
 import { clientDb } from '@/lib/firebase';
 
 interface LeadsContextType {
@@ -33,12 +33,10 @@ export const LeadsProvider = ({ children, initialData }: { children: ReactNode, 
   useEffect(() => {
     if (!location) return;
 
-    const docRef = doc(clientDb, 'locations', location, 'data', 'leads.json');
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data().content as Lead[];
+    const colRef = collection(clientDb, 'locations', location, 'leads');
+    const unsubscribe = onSnapshot(colRef, (snapshot) => {
+        const data = snapshot.docs.map(doc => doc.data() as Lead);
         setLeads(data);
-      }
     });
 
     return () => unsubscribe();

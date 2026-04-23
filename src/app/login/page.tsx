@@ -22,7 +22,10 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      const token = await userCred.user.getIdToken();
+      document.cookie = `authToken=${token}; path=/; max-age=3600; secure`;
+      
       toast({
         title: "Sucesso",
         description: "Bem-vindo de volta!",

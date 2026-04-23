@@ -16,7 +16,6 @@ import { AuditLogProvider } from '@/context/audit-log-context';
 import { LeadsProvider } from '@/context/leads-context';
 import { useLocation } from '@/context/location-context';
 import { useEffect, useState } from 'react';
-import { readData } from '@/lib/actions';
 import type { Specialist, Goal, Holiday, AgendaTask, MessageTemplate, Candidate, Lead, AuditLogEntry, Student } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -36,7 +35,7 @@ function Header({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
-        "sticky top-0 z-40 h-16 shrink-0 border-b bg-background md:hidden",
+        "sticky top-0 z-40 h-16 shrink-0 border-b bg-background/80 backdrop-blur-xl md:hidden",
         className
       )}
       {...props}
@@ -73,48 +72,10 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         }
 
         const loadData = async () => {
-            setLoading(true);
-            const locationId = location; 
-
-            const [
-                specialistsData,
-                goalsData,
-                holidaysData,
-                tasksData,
-                templatesData,
-                candidatesData,
-                leadsData,
-                studentsData,
-                paidBonusesData,
-                academicPeriodData,
-                logsData
-            ] = await Promise.all([
-                readData<Specialist[]>('specialists.json', [], locationId),
-                readData<Goal[]>('goals.json', [], locationId),
-                readData<Holiday[]>('holidays.json', [], locationId),
-                readData<AgendaTask[]>('agenda.json', [], locationId),
-                readData<MessageTemplate[]>('templates.json', [], locationId),
-                readData<Candidate[]>('candidates.json', [], locationId),
-                readData<Lead[]>('leads.json', [], locationId),
-                readData<Student[]>('students.json', [], locationId),
-                readData<PaidBonusesData>('paid-bonuses.json', {}, locationId),
-                readData<{ startDate: string | null, endDate: string | null }>('academic-period.json', { startDate: null, endDate: null }, locationId),
-                readData<AuditLogEntry[]>('logs.json', [], locationId),
-            ]);
-
-            setSpecialists(specialistsData);
-            setGoals(goalsData);
-            setHolidays(holidaysData);
-            setTasks(tasksData);
-            setTemplates(templatesData);
-            setCandidates(candidatesData);
-            setLeads(leadsData);
-            setStudents(studentsData);
-            setPaidBonuses(paidBonusesData);
-            setAcademicPeriod(academicPeriodData);
-            setLogs(logsData);
             setLoading(false);
         };
+
+        loadData();
 
         loadData();
     }, [location, router]);

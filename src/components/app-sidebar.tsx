@@ -189,7 +189,7 @@ export default function AppSidebar() {
 
   return (
     <Sidebar className="border-r-0 shadow-xl">
-        <div className="flex flex-col h-full bg-card dark:bg-zinc-950">
+        <div className="flex flex-col h-full bg-card/90 dark:bg-zinc-950/90 backdrop-blur-xl">
             <SidebarHeader className="border-b bg-primary/5">
                 <div className="flex items-center justify-between w-full">
                     <Logo isMinimized={!open && !isMobile} />

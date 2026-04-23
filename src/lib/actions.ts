@@ -1,7 +1,18 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { db } from './firebase-admin';
+import { db, admin } from './firebase-admin';
+import { cookies } from 'next/headers';
+
+async function verifyAuth() {
+    const token = cookies().get('authToken')?.value;
+    if (!token) throw new Error('Acesso não autorizado: Token ausente');
+    try {
+        await admin.auth().verifyIdToken(token);
+    } catch {
+        throw new Error('Acesso não autorizado: Token inválido ou expirado');
+    }
+}
 
 // Função auxiliar para migrar/salvar array em subcoleções (em blocos de 500 para respeitar limite do Firebase)
 async function saveToSubcollection(location: string, collectionName: string, data: any[]) {
@@ -66,6 +77,7 @@ export async function listLocations(): Promise<string[]> {
 }
 
 export async function addLocation(locationName: string): Promise<void> {
+    await verifyAuth();
     const adminDb = requireDb();
     const locationRef = adminDb.collection('locations').doc(locationName);
     const docSnap = await locationRef.get();
@@ -91,8 +103,8 @@ export async function addLocation(locationName: string): Promise<void> {
 
     const batch = adminDb.batch();
     for (const [filename, content] of Object.entries(defaultFiles)) {
-        if (filename === 'students.json') {
-            continue; // Will be handled dynamically via subcollections
+        if (['students.json', 'leads.json', 'candidates.json'].includes(filename)) {
+            continue; // Handled dynamically via subcollections
         }
         const fileRef = locationRef.collection('data').doc(filename);
         batch.set(fileRef, { content });
@@ -103,6 +115,7 @@ export async function addLocation(locationName: string): Promise<void> {
 }
 
 export async function updateLocation(oldLocationName: string, newLocationName: string): Promise<void> {
+    await verifyAuth();
     if (oldLocationName === newLocationName) return;
     const adminDb = requireDb();
 
@@ -121,18 +134,20 @@ export async function updateLocation(oldLocationName: string, newLocationName: s
         const batch = adminDb.batch();
         
         dataSnapshot.forEach((docSnap) => {
-            if (docSnap.id === 'students.json') return; // Skip old students.json if any
+            if (['students.json', 'leads.json', 'candidates.json'].includes(docSnap.id)) return;
             const newFileRef = newLocationRef.collection('data').doc(docSnap.id);
             batch.set(newFileRef, docSnap.data());
             batch.delete(docSnap.ref);
         });
 
-        const studentsSnapshot = await oldLocationRef.collection('students').get();
-        studentsSnapshot.forEach((docSnap) => {
-            const newFileRef = newLocationRef.collection('students').doc(docSnap.id);
-            batch.set(newFileRef, docSnap.data());
-            batch.delete(docSnap.ref);
-        });
+        for (const subcol of ['students', 'leads', 'candidates']) {
+            const subSnapshot = await oldLocationRef.collection(subcol).get();
+            subSnapshot.forEach((docSnap) => {
+                const newFileRef = newLocationRef.collection(subcol).doc(docSnap.id);
+                batch.set(newFileRef, docSnap.data());
+                batch.delete(docSnap.ref);
+            });
+        }
 
         batch.delete(oldLocationRef);
         await batch.commit();
@@ -145,6 +160,7 @@ export async function updateLocation(oldLocationName: string, newLocationName: s
 }
 
 export async function deleteLocation(locationName: string): Promise<void> {
+    await verifyAuth();
     const adminDb = requireDb();
     try {
         const locationRef = adminDb.collection('locations').doc(locationName);
@@ -155,10 +171,12 @@ export async function deleteLocation(locationName: string): Promise<void> {
             batch.delete(docSnap.ref);
         });
 
-        const studentsSnapshot = await locationRef.collection('students').get();
-        studentsSnapshot.forEach((docSnap) => {
-            batch.delete(docSnap.ref);
-        });
+        for (const subcol of ['students', 'leads', 'candidates']) {
+            const subSnapshot = await locationRef.collection(subcol).get();
+            subSnapshot.forEach((docSnap) => {
+                batch.delete(docSnap.ref);
+            });
+        }
         
         batch.delete(locationRef);
         await batch.commit();
@@ -174,8 +192,15 @@ export async function readData<T>(filename: string, defaultData: T, location: st
   if (!location || !db) return defaultData;
   const adminDb = db;
 
-  if (filename === 'students.json') {
-      const colRef = adminDb.collection('locations').doc(location).collection('students');
+  const subcollectionMapping: Record<string, string> = {
+      'students.json': 'students',
+      'leads.json': 'leads',
+      'candidates.json': 'candidates'
+  };
+
+  const subcolName = subcollectionMapping[filename];
+  if (subcolName) {
+      const colRef = adminDb.collection('locations').doc(location).collection(subcolName);
       try {
           const snapshot = await colRef.get();
           if (!snapshot.empty) {
@@ -227,10 +252,11 @@ export async function saveData(
     data: any, 
     revalidatePaths: string[] = []
 ) {
+  await verifyAuth();
   if (!location) throw new Error("Location must be provided to save data.");
   
-  if (dataType === 'students') {
-      if (!Array.isArray(data)) throw new Error("Data must be an array for students");
+  if (['students', 'leads', 'candidates'].includes(dataType)) {
+      if (!Array.isArray(data)) throw new Error(`Data must be an array for ${dataType}`);
       await saveToSubcollection(location, dataType, data);
   } else {
       const filename = `${dataType}.json`;
