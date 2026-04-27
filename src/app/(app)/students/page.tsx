@@ -393,7 +393,7 @@ function StudentsPageContent() {
 
   return (
     <div className="w-full">
-      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="p-4 sm:p-6 lg:p-8 w-full max-w-[1600px] mx-auto">
         <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div><h1 className="text-4xl font-headline font-bold tracking-tight text-primary">Alunos</h1><p className="text-muted-foreground text-lg">Gerencie a base de alunos ativos e veteranos.</p></div>
           <div className="flex gap-2 w-full sm:w-auto">
