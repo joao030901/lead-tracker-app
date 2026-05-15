@@ -12,18 +12,18 @@ export function Logo({ isMinimized = false }: LogoProps) {
     )}>
       <div className="relative shrink-0 scale-95 sm:scale-100">
         {/* Static Premium Glow */}
-        <div className="absolute -inset-2 bg-gradient-to-tr from-primary/30 via-emerald-400/20 to-blue-500/30 rounded-xl blur-md opacity-40 group-hover:opacity-60 transition duration-700" />
+        <div className="absolute -inset-2 bg-gradient-to-tr from-primary/20 via-emerald-400/10 to-blue-500/20 dark:from-primary/30 dark:via-emerald-400/20 dark:to-blue-500/30 rounded-xl blur-md opacity-40 group-hover:opacity-60 transition duration-700" />
         
         {/* Main Logo Container */}
-        <div className="relative h-10 w-10 bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/10 rounded-xl flex items-center justify-center shadow-2xl group-hover:border-primary/50 transition-all duration-500">
+        <div className="relative h-10 w-10 bg-white dark:bg-gradient-to-br dark:from-zinc-900 dark:to-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl flex items-center justify-center shadow-lg dark:shadow-2xl group-hover:border-primary/50 transition-all duration-500">
             {/* Interior Glass Shine */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-zinc-100/50 to-transparent dark:from-white/10 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             
             <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-7 w-7 transition-transform duration-500 group-hover:scale-110"
+                className="h-7 w-7 transition-transform duration-500 group-hover:scale-110 text-zinc-900 dark:text-white"
             >
                 <defs>
                     <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -56,12 +56,12 @@ export function Logo({ isMinimized = false }: LogoProps) {
                 />
                 <path 
                     d="M12 11V14" 
-                    stroke="#fff" 
+                    stroke="currentColor" 
                     strokeWidth="1.5" 
                     strokeLinecap="round" 
                     className="opacity-80"
                 />
-                <circle cx="12" cy="10" r="1" fill="#fff" />
+                <circle cx="12" cy="10" r="1" fill="currentColor" />
             </svg>
         </div>
       </div>
