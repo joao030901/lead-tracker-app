@@ -6,7 +6,10 @@ interface LogoProps {
 
 export function Logo({ isMinimized = false }: LogoProps) {
   return (
-    <div className="flex items-center gap-3 overflow-hidden group">
+    <div className={cn(
+      "flex items-center transition-all duration-300 overflow-hidden group",
+      isMinimized ? "justify-center w-full" : "gap-3"
+    )}>
       <div className="relative shrink-0">
         <div className="absolute -inset-1 bg-gradient-to-tr from-primary via-blue-500 to-emerald-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-500" />
         <div className="relative h-10 w-10 bg-card border border-primary/20 rounded-lg flex items-center justify-center shadow-sm">
@@ -29,7 +32,7 @@ export function Logo({ isMinimized = false }: LogoProps) {
       <span 
         className={cn(
           "font-headline text-2xl font-bold tracking-tight text-foreground transition-all duration-300 whitespace-nowrap",
-          { "sr-only opacity-0 w-0": isMinimized }
+          isMinimized ? "w-0 opacity-0 ml-0 overflow-hidden" : "w-auto opacity-100"
         )}
       >
         Leads<span className="text-primary">Uni</span>
