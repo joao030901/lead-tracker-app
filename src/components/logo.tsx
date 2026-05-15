@@ -74,7 +74,7 @@ export function Logo({ isMinimized = false }: LogoProps) {
             Leads<span className="text-primary bg-clip-text text-transparent bg-gradient-to-r from-primary to-emerald-400">Uni</span>
         </span>
         <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] mt-0.5">
-            Edu Management
+            Gestão Educacional
         </span>
       </div>
     </div>
