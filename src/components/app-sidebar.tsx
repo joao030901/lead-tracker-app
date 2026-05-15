@@ -16,6 +16,7 @@ import {
   CheckCircle,
   Contact,
   GraduationCap,
+  Search,
 } from 'lucide-react';
 
 import {
@@ -36,12 +37,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { useAgenda } from '@/context/agenda-context';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { parse, isToday } from 'date-fns';
 import { AgendaTask } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { listLocations } from '@/lib/actions';
+import { Input } from './ui/input';
+import { Separator } from './ui/separator';
 
 const menuItems = [
   {
@@ -160,9 +164,23 @@ export function NotificationBell() {
 export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { location, clearLocation } = useLocation();
+  const { location, setLocation, clearLocation } = useLocation();
   const { theme, setTheme } = useTheme();
   const { open, setOpen, isMobile } = useSidebar();
+  const [availableLocations, setAvailableLocations] = useState<string[]>([]);
+  const [locationSearch, setLocationSearch] = useState('');
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const locs = await listLocations();
+        setAvailableLocations(locs);
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+      }
+    };
+    fetchLocations();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -186,6 +204,15 @@ export default function AppSidebar() {
   }
 
   const handleToggleSidebar = () => setOpen(!open);
+
+  const filteredLocations = availableLocations.filter(loc => 
+    loc.replace(/_/g, ' ').toLowerCase().includes(locationSearch.toLowerCase())
+  );
+
+  const handleLocationSwitch = (newLoc: string) => {
+    setLocation(newLoc);
+    window.location.reload(); // Reload to ensure all context providers reset cleanly
+  };
 
   return (
     <Sidebar className="border-r-0 shadow-xl">
@@ -235,14 +262,54 @@ export default function AppSidebar() {
             <SidebarFooter className="border-t bg-muted/30">
                  <div className={cn("flex items-center justify-between p-2", (!open && !isMobile) && 'flex-col gap-2')}>
                     <div className={cn("flex items-center gap-1", (!open && !isMobile) ? 'flex-col' : 'flex-row')}>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" onClick={() => router.push('/')}>
-                                    <Building className="h-5 w-5"/>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="right">{locationName}</TooltipContent>
-                        </Tooltip>
+                        <Popover>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
+                                            <Building className="h-5 w-5"/>
+                                        </Button>
+                                    </PopoverTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent side="right">Trocar Unidade ({locationName})</TooltipContent>
+                            </Tooltip>
+                            <PopoverContent side={(!open && !isMobile) ? "right" : "top"} align="start" className="w-64 p-0">
+                                <div className="p-3 border-b bg-muted/20">
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Alternar Unidade</h4>
+                                    <div className="relative">
+                                        <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                                        <Input 
+                                            placeholder="Buscar unidade..." 
+                                            className="h-8 pl-8 text-xs" 
+                                            value={locationSearch}
+                                            onChange={(e) => setLocationSearch(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <ScrollArea className="h-full max-h-64">
+                                    <div className="p-1">
+                                        {filteredLocations.map((loc) => (
+                                            <Button
+                                                key={loc}
+                                                variant="ghost"
+                                                className={cn(
+                                                    "w-full justify-start text-xs h-9 mb-0.5",
+                                                    location === loc ? "bg-primary/10 text-primary font-bold" : "font-medium"
+                                                )}
+                                                onClick={() => handleLocationSwitch(loc)}
+                                            >
+                                                <Building className={cn("mr-2 h-3.5 w-3.5", location === loc ? "text-primary" : "text-muted-foreground")} />
+                                                {formatLocationName(loc)}
+                                                {location === loc && <CheckCircle className="ml-auto h-3.5 w-3.5" />}
+                                            </Button>
+                                        ))}
+                                        {filteredLocations.length === 0 && (
+                                            <div className="p-4 text-center text-xs text-muted-foreground">Nenhuma unidade encontrada</div>
+                                        )}
+                                    </div>
+                                </ScrollArea>
+                            </PopoverContent>
+                        </Popover>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" onClick={handleToggleTheme}>
