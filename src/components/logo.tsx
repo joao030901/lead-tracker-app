@@ -7,15 +7,15 @@ interface LogoProps {
 export function Logo({ isMinimized = false }: LogoProps) {
   return (
     <div className={cn(
-      "flex items-center transition-all duration-500 overflow-hidden group",
+      "flex items-center transition-all duration-500 group",
       isMinimized ? "justify-center w-full px-0" : "gap-3 px-1"
     )}>
-      <div className="relative shrink-0">
+      <div className="relative shrink-0 scale-90 sm:scale-100">
         {/* Animated Glow Background */}
         <div className="absolute -inset-2 bg-gradient-to-tr from-primary via-emerald-400 to-blue-500 rounded-xl blur-md opacity-20 group-hover:opacity-40 transition duration-700 animate-pulse" />
         
         {/* Main Logo Container */}
-        <div className="relative h-11 w-11 bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/10 rounded-xl flex items-center justify-center shadow-2xl overflow-hidden group-hover:border-primary/50 transition-all duration-500">
+        <div className="relative h-10 w-10 bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/10 rounded-xl flex items-center justify-center shadow-2xl group-hover:border-primary/50 transition-all duration-500">
             {/* Interior Glass Shine */}
             <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             
