@@ -7,36 +7,76 @@ interface LogoProps {
 export function Logo({ isMinimized = false }: LogoProps) {
   return (
     <div className={cn(
-      "flex items-center transition-all duration-300 overflow-hidden group",
-      isMinimized ? "justify-center w-full" : "gap-3"
+      "flex items-center transition-all duration-500 overflow-hidden group",
+      isMinimized ? "justify-center w-full px-0" : "gap-3 px-1"
     )}>
       <div className="relative shrink-0">
-        <div className="absolute -inset-1 bg-gradient-to-tr from-primary via-blue-500 to-emerald-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-500" />
-        <div className="relative h-10 w-10 bg-card border border-primary/20 rounded-lg flex items-center justify-center shadow-sm">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-6 w-6 text-primary"
-          >
-            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-            <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
-            <path d="M12 11v4" className="text-emerald-500" />
-            <path d="m9 13 3 2 3-2" className="text-emerald-500" />
-          </svg>
+        {/* Animated Glow Background */}
+        <div className="absolute -inset-2 bg-gradient-to-tr from-primary via-emerald-400 to-blue-500 rounded-xl blur-md opacity-20 group-hover:opacity-40 transition duration-700 animate-pulse" />
+        
+        {/* Main Logo Container */}
+        <div className="relative h-11 w-11 bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/10 rounded-xl flex items-center justify-center shadow-2xl overflow-hidden group-hover:border-primary/50 transition-all duration-500">
+            {/* Interior Glass Shine */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-7 w-7 transition-transform duration-500 group-hover:scale-110"
+            >
+                <defs>
+                    <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="var(--primary)" />
+                        <stop offset="100%" stopColor="#10b981" />
+                    </linearGradient>
+                </defs>
+                <path 
+                    d="M22 10L12 5L2 10L12 15L22 10Z" 
+                    fill="url(#logo-grad)" 
+                    fillOpacity="0.3"
+                    stroke="url(#logo-grad)" 
+                    strokeWidth="1.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                />
+                <path 
+                    d="M6 12.5V16.5C6 16.5 8 19 12 19C16 19 18 16.5 18 16.5V12.5" 
+                    stroke="url(#logo-grad)" 
+                    strokeWidth="1.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                />
+                <path 
+                    d="M22 10V16" 
+                    stroke="url(#logo-grad)" 
+                    strokeWidth="1.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                />
+                <path 
+                    d="M12 11V14" 
+                    stroke="#fff" 
+                    strokeWidth="1.5" 
+                    strokeLinecap="round" 
+                    className="opacity-80"
+                />
+                <circle cx="12" cy="10" r="1" fill="#fff" className="animate-pulse" />
+            </svg>
         </div>
       </div>
-      <span 
-        className={cn(
-          "font-headline text-2xl font-bold tracking-tight text-foreground transition-all duration-300 whitespace-nowrap",
-          isMinimized ? "w-0 opacity-0 ml-0 overflow-hidden" : "w-auto opacity-100"
-        )}
-      >
-        Leads<span className="text-primary">Uni</span>
-      </span>
+      
+      <div className={cn(
+        "flex flex-col transition-all duration-500",
+        isMinimized ? "w-0 opacity-0 scale-90" : "w-auto opacity-100 scale-100"
+      )}>
+        <span className="font-headline text-xl font-black tracking-tight text-foreground leading-none">
+            Leads<span className="text-primary bg-clip-text text-transparent bg-gradient-to-r from-primary to-emerald-400">Uni</span>
+        </span>
+        <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] mt-0.5">
+            Edu Management
+        </span>
+      </div>
     </div>
   );
 }
