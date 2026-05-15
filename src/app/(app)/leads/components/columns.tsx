@@ -147,7 +147,17 @@ export const columns = (onConvertClick: (lead: Lead) => void): ColumnDef<Lead>[]
   {
     accessorKey: 'name',
     header: 'Nome',
-    cell: ({ row }) => <span className="font-semibold">{row.getValue('name')}</span>
+    cell: ({ row }) => {
+        const l = row.original as Lead;
+        return (
+            <div className="flex flex-col">
+                <span className="font-semibold text-sm leading-tight">{l.name}</span>
+                <span className="text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded mt-1 font-mono w-fit whitespace-nowrap uppercase">
+                    CRIADO: {formatDateDisplay(l.createdAt)}
+                </span>
+            </div>
+        )
+    }
   },
   {
     accessorKey: 'phone',

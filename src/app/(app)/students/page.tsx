@@ -163,17 +163,24 @@ function StudentPreviewContent({
                 <GraduationCap className="h-8 w-8" />
             </div>
             <h2 className="text-xl font-bold font-headline leading-tight">{student.name}</h2>
-            <div className="flex items-center gap-2 mt-2">
-                <Badge variant={student.isActive ? 'default' : 'destructive'} className='text-[10px] py-0 px-2'>{student.isActive ? 'ATIVO' : 'INATIVO'}</Badge>
-                <div className="text-muted-foreground flex items-center gap-1 bg-background px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase font-mono tracking-tighter group">
-                    MATRÍCULA: {student.id}
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" 
-                        onClick={() => handleCopy(student.id, 'Matrícula')}
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-4">
+                <Badge 
+                    variant={student.isActive ? 'default' : 'destructive'} 
+                    className='h-7 px-3 text-[10px] font-bold uppercase tracking-wider'
+                >
+                    {student.isActive ? 'ATIVO' : 'INATIVO'}
+                </Badge>
+                
+                <div className="flex items-center h-7 gap-1.5 bg-primary/10 text-primary px-2.5 rounded-full border border-primary/20 text-[9px] font-bold font-mono group transition-all hover:bg-primary/20">
+                    <span className="opacity-70">MATRÍCULA:</span>
+                    <span className="text-xs tracking-wider font-bold">{student.id}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 ml-0.5 opacity-40 group-hover:opacity-100 transition-opacity hover:bg-transparent"
+                      onClick={() => handleCopy(student.id, 'Matrícula')}
                     >
-                        <Copy className="h-2.5 w-2.5" />
+                      <Copy className="h-2.5 w-2.5" />
                     </Button>
                 </div>
             </div>

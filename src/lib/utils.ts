@@ -73,3 +73,10 @@ export const formatDateDisplay = (dateString: string | null | undefined, formatS
   if (!date) return 'N/A';
   return format(date, formatStr, { locale: ptBR });
 }
+
+export const formatCPF = (cpf: string | null | undefined) => {
+  if (!cpf) return '';
+  const digits = cpf.replace(/\D/g, '');
+  if (digits.length !== 11) return digits;
+  return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+};

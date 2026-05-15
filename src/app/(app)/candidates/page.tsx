@@ -28,7 +28,9 @@ import {
   Phone,
   LogIn,
   Target,
-  Contact
+  Contact,
+  Fingerprint,
+  Cake
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Candidate } from '@/lib/types';
@@ -90,7 +92,7 @@ import {
 import { useTemplates } from '@/context/templates-context';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { useAuditLog } from '@/context/audit-log-context';
-import { cn, fillTemplate, formatPhoneNumberForWhatsApp, formatDateDisplay, safeParseDate } from '@/lib/utils';
+import { cn, fillTemplate, formatPhoneNumberForWhatsApp, formatDateDisplay, safeParseDate, formatCPF } from '@/lib/utils';
 import { useSpecialists } from '@/context/specialists-context';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -196,17 +198,26 @@ function CandidatePreviewContent({
                 <User className="h-8 w-8" />
             </div>
             <h2 className="text-xl font-bold font-headline leading-tight">{candidate.name}</h2>
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
-                <Badge variant={candidate.status === 'Canceled' ? 'destructive' : candidate.enrollmentDate ? 'default' : 'outline'}>
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-4">
+                <Badge 
+                    variant={candidate.status === 'Canceled' ? 'destructive' : candidate.enrollmentDate ? 'default' : 'outline'}
+                    className="h-7 px-3 text-[10px] font-bold uppercase tracking-wider"
+                >
                     {statusTranslations[candidate.status] || candidate.status}
                 </Badge>
-                <div className="text-muted-foreground flex items-center gap-1 bg-background px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase font-mono group">
-                    CÓD: {candidate.registrationCode}
+                
+                <div className="flex items-center h-7 gap-1.5 bg-primary/10 text-primary px-2.5 rounded-full border border-primary/20 text-[9px] font-bold font-mono group transition-all hover:bg-primary/20">
+                    <span className="opacity-70">{['Enrolled', 'Engaged', 'Canceled'].includes(candidate.status) ? 'MATR:' : 'CÓD:'}</span>
+                    <span className="text-xs tracking-wider font-bold">
+                        {(['Enrolled', 'Engaged', 'Canceled'].includes(candidate.status) && candidate.enrollmentCode) 
+                            ? candidate.enrollmentCode 
+                            : candidate.registrationCode}
+                    </span>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleCopy(candidate.registrationCode, 'CÓD')}
+                      className="h-4 w-4 ml-0.5 opacity-40 group-hover:opacity-100 transition-opacity hover:bg-transparent"
+                      onClick={() => handleCopy((['Enrolled', 'Engaged', 'Canceled'].includes(candidate.status) && candidate.enrollmentCode) ? candidate.enrollmentCode : candidate.registrationCode, (['Enrolled', 'Engaged', 'Canceled'].includes(candidate.status)) ? 'MATR' : 'CÓD')}
                     >
                       <Copy className="h-2.5 w-2.5" />
                     </Button>
@@ -251,6 +262,8 @@ function CandidatePreviewContent({
             </div>
 
             <InfoItem icon={Mail} label="Email" value={candidate.email} color="rose" />
+            <InfoItem icon={Fingerprint} label="CPF" value={formatCPF(candidate.cpf) || 'Não informado'} />
+            <InfoItem icon={Cake} label="Data de Nascimento" value={formatDateDisplay(candidate.birthDate)} color="amber" />
             <InfoItem icon={MapPin} label="Cidade" value={candidate.city} color="amber" />
 
             <div className="grid grid-cols-2 gap-3">
@@ -387,6 +400,7 @@ function CandidatesPageContent() {
               firstPaymentPaid, paymentDate: row['DATA_PAGAMENTO_PRIMEIRA_MENSALIDADE'] || row['DATA_PAGAMENTO'] || null,
               entryMethod: row['ENTRADA_QUE_ALUNO_SELECIONOU'] || null, registrationLoginName: row['NOME_LOGIN_INSCRICAO'] || null,
               cancellationDate: row['DATA_CANCELAMENTO'] || null, city: row['CIDADE'] || null,
+              enrollmentCode: row['MATRICULA'] || row['CODIGO_ALUNO'] || row['RA'] || null,
             };
             const existingCandidate = candidatesMap.get(registrationCode);
             if (existingCandidate) {

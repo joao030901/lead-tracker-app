@@ -2,7 +2,7 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { MessageSquare, Check, ChevronsUpDown } from 'lucide-react';
+import { MessageSquare, Check, ChevronsUpDown, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -151,10 +151,29 @@ export const getColumns = (handleCopy: (text: string, subject: string) => void):
     header: 'Nome',
     cell: ({ row }) => {
         const c = row.original as Candidate;
+        const showEnrollment = ['Enrolled', 'Engaged', 'Canceled'].includes(c.status);
+        const codeToDisplay = (showEnrollment && c.enrollmentCode) ? c.enrollmentCode : c.registrationCode;
+        const label = showEnrollment ? 'MATR' : 'CÓD';
+        
         return (
             <div className="flex flex-col">
                 <span className="font-semibold text-sm leading-tight">{c.name}</span>
-                <span className="text-[10px] text-muted-foreground uppercase mt-0.5 font-mono">CÓD: {c.registrationCode}</span>
+                <div className="flex items-center gap-1 mt-1 group/code">
+                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono w-fit whitespace-nowrap">
+                        {label}: {codeToDisplay}
+                    </span>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-4 w-4 opacity-0 group-hover/code:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopy(codeToDisplay, label);
+                        }}
+                    >
+                        <Copy className="h-2.5 w-2.5" />
+                    </Button>
+                </div>
             </div>
         )
     }
@@ -163,6 +182,16 @@ export const getColumns = (handleCopy: (text: string, subject: string) => void):
     accessorKey: 'phone',
     header: 'Telefone',
     cell: ({ row }) => <span className="text-xs tabular-nums">{row.getValue('phone')}</span>
+  },
+  {
+    accessorKey: 'cpf',
+    header: 'CPF',
+    cell: ({ row }) => <span className="text-xs tabular-nums">{row.getValue('cpf') || '-'}</span>
+  },
+  {
+    accessorKey: 'birthDate',
+    header: 'Nascimento',
+    cell: ({ row }) => <span className="text-xs tabular-nums">{formatDateDisplay(row.getValue('birthDate'))}</span>
   },
   {
     accessorKey: 'course',

@@ -31,6 +31,7 @@ export default function LocationSelectionPage() {
         setLocations(fetchedLocations);
     } catch (error) {
         console.error("Failed to fetch locations:", error);
+        toast({ title: 'Erro', description: (error as Error).message, variant: 'destructive'});
     } finally {
         setIsLoading(false);
     }

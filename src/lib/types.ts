@@ -54,6 +54,7 @@ export type Candidate = {
   name: string;
   cpf?: string | null;
   registrationCode: string;
+  enrollmentCode?: string | null;
   registrationDate: string;
   enrollmentDate: string | null;
   course: string;

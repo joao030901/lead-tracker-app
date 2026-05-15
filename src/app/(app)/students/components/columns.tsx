@@ -61,7 +61,22 @@ export const getColumns = (
         return (
             <div className="flex flex-col">
                 <span className="font-semibold text-sm leading-tight">{student.name}</span>
-                <span className="text-[10px] text-muted-foreground uppercase mt-0.5 font-mono">MAT: {student.id}</span>
+                <div className="flex items-center gap-1 mt-1 group/code">
+                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono w-fit whitespace-nowrap">
+                        MAT: {student.id}
+                    </span>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-4 w-4 opacity-0 group-hover/code:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopy(student.id, 'Matrícula');
+                        }}
+                    >
+                        <Copy className="h-2.5 w-2.5" />
+                    </Button>
+                </div>
             </div>
         )
     }

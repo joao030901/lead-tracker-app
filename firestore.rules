@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Allow authenticated users to read and write all documents in the locations collection
+    // and all documents in any subcollection (recursively)
+    match /locations/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Default deny for anything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

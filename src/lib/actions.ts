@@ -104,13 +104,15 @@ function requireDb() {
 }
 
 export async function listLocations(): Promise<string[]> {
+    if (!db) {
+        throw new Error('Firebase Admin SDK não inicializado. Verifique as variáveis de ambiente.');
+    }
     try {
-        if (!db) return [];
         const querySnapshot = await db.collection('locations').get();
         return querySnapshot.docs.map(docSnap => docSnap.id);
     } catch (error) {
         console.error('Error listing locations:', error);
-        return [];
+        throw new Error('Erro ao listar unidades: ' + (error as Error).message);
     }
 }
 

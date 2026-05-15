@@ -145,9 +145,11 @@ function LeadPreviewContent({ lead, onConvertClick, handleCopy }: { lead: Lead; 
                     <Contact className="h-8 w-8" />
                 </div>
                 <h2 className="text-xl font-bold font-headline leading-tight">{lead.name}</h2>
-                <Badge variant="outline" className="mt-2 uppercase text-[10px] tracking-widest font-bold">
-                    CRIADO EM {formatDateDisplay(lead.createdAt)}
-                </Badge>
+                <div className="flex flex-wrap items-center justify-center gap-6 mt-4">
+                    <div className="flex items-center h-7 gap-1.5 bg-primary/10 text-primary px-3 rounded-full border border-primary/20 text-[9px] font-bold uppercase tracking-widest font-mono">
+                        CRIADO EM {formatDateDisplay(lead.createdAt)}
+                    </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 gap-3">
