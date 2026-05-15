@@ -10,9 +10,9 @@ export function Logo({ isMinimized = false }: LogoProps) {
       "flex items-center transition-all duration-500 group",
       isMinimized ? "justify-center w-full px-0" : "gap-3 px-1"
     )}>
-      <div className="relative shrink-0 scale-90 sm:scale-100">
-        {/* Animated Glow Background */}
-        <div className="absolute -inset-2 bg-gradient-to-tr from-primary via-emerald-400 to-blue-500 rounded-xl blur-md opacity-20 group-hover:opacity-40 transition duration-700 animate-pulse" />
+      <div className="relative shrink-0 scale-95 sm:scale-100">
+        {/* Static Premium Glow */}
+        <div className="absolute -inset-2 bg-gradient-to-tr from-primary/30 via-emerald-400/20 to-blue-500/30 rounded-xl blur-md opacity-40 group-hover:opacity-60 transition duration-700" />
         
         {/* Main Logo Container */}
         <div className="relative h-10 w-10 bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/10 rounded-xl flex items-center justify-center shadow-2xl group-hover:border-primary/50 transition-all duration-500">
@@ -61,7 +61,7 @@ export function Logo({ isMinimized = false }: LogoProps) {
                     strokeLinecap="round" 
                     className="opacity-80"
                 />
-                <circle cx="12" cy="10" r="1" fill="#fff" className="animate-pulse" />
+                <circle cx="12" cy="10" r="1" fill="#fff" />
             </svg>
         </div>
       </div>
