@@ -308,6 +308,19 @@ export default function AppSidebar() {
                                         )}
                                     </div>
                                 </ScrollArea>
+                                <div className="p-2 border-t bg-muted/10">
+                                    <Button 
+                                        variant="outline" 
+                                        className="w-full text-xs h-8 font-medium"
+                                        onClick={() => {
+                                            clearLocation();
+                                            router.push('/');
+                                        }}
+                                    >
+                                        <Settings className="mr-2 h-3.5 w-3.5" />
+                                        Gerenciar Unidades
+                                    </Button>
+                                </div>
                             </PopoverContent>
                         </Popover>
                         <Tooltip>

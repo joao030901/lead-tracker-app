@@ -171,26 +171,50 @@ export async function updateLocation(oldLocationName: string, newLocationName: s
         await newLocationRef.set({ name: newLocationName, updatedAt: new Date().toISOString() });
 
         const dataSnapshot = await oldLocationRef.collection('data').get();
-        const batch = adminDb.batch();
+        const batches = [];
+        let currentBatch = adminDb.batch();
+        let opCount = 0;
+
+        const commitBatch = () => {
+            batches.push(currentBatch.commit());
+            currentBatch = adminDb.batch();
+            opCount = 0;
+        };
+
+        const addSet = (ref: any, data: any) => {
+            currentBatch.set(ref, data);
+            opCount++;
+            if (opCount === 500) commitBatch();
+        };
+
+        const addDelete = (ref: any) => {
+            currentBatch.delete(ref);
+            opCount++;
+            if (opCount === 500) commitBatch();
+        };
         
         dataSnapshot.forEach((docSnap) => {
             if (['students.json', 'leads.json', 'candidates.json'].includes(docSnap.id)) return;
             const newFileRef = newLocationRef.collection('data').doc(docSnap.id);
-            batch.set(newFileRef, docSnap.data());
-            batch.delete(docSnap.ref);
+            addSet(newFileRef, docSnap.data());
+            addDelete(docSnap.ref);
         });
 
         for (const subcol of ['students', 'leads', 'candidates']) {
             const subSnapshot = await oldLocationRef.collection(subcol).get();
             subSnapshot.forEach((docSnap) => {
                 const newFileRef = newLocationRef.collection(subcol).doc(docSnap.id);
-                batch.set(newFileRef, docSnap.data());
-                batch.delete(docSnap.ref);
+                addSet(newFileRef, docSnap.data());
+                addDelete(docSnap.ref);
             });
         }
 
-        batch.delete(oldLocationRef);
-        await batch.commit();
+        addDelete(oldLocationRef);
+        
+        if (opCount > 0) {
+            batches.push(currentBatch.commit());
+        }
+        await Promise.all(batches);
 
         revalidatePath('/');
     } catch (error) {
@@ -206,20 +230,39 @@ export async function deleteLocation(locationName: string): Promise<void> {
         const locationRef = adminDb.collection('locations').doc(locationName);
         
         const dataSnapshot = await locationRef.collection('data').get();
-        const batch = adminDb.batch();
+        const batches = [];
+        let currentBatch = adminDb.batch();
+        let opCount = 0;
+
+        const commitBatch = () => {
+            batches.push(currentBatch.commit());
+            currentBatch = adminDb.batch();
+            opCount = 0;
+        };
+
+        const addDelete = (ref: any) => {
+            currentBatch.delete(ref);
+            opCount++;
+            if (opCount === 500) commitBatch();
+        };
+
         dataSnapshot.forEach((docSnap) => {
-            batch.delete(docSnap.ref);
+            addDelete(docSnap.ref);
         });
 
         for (const subcol of ['students', 'leads', 'candidates']) {
             const subSnapshot = await locationRef.collection(subcol).get();
             subSnapshot.forEach((docSnap) => {
-                batch.delete(docSnap.ref);
+                addDelete(docSnap.ref);
             });
         }
         
-        batch.delete(locationRef);
-        await batch.commit();
+        addDelete(locationRef);
+        
+        if (opCount > 0) {
+            batches.push(currentBatch.commit());
+        }
+        await Promise.all(batches);
 
         revalidatePath('/');
     } catch (error) {
