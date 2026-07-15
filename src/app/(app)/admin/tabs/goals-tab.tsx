@@ -29,6 +29,7 @@ export function GoalsTab() {
             case 'Registrations': return 'Inscrições';
             case 'Enrollments': return 'Matrículas';
             case 'Engagement': return 'Engajamento';
+            case 'Cancellations': return 'Cancelamentos';
             default: return type;
         }
     }

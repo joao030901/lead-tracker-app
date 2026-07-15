@@ -75,7 +75,7 @@ export type Candidate = {
 
 export type Goal = {
   id: string;
-  type: 'Enrollments' | 'Registrations' | 'Engagement';
+  type: 'Enrollments' | 'Registrations' | 'Engagement' | 'Cancellations';
   target: number;
   achieved: number;
 };

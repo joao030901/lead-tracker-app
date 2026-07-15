@@ -21,6 +21,7 @@ const defaultGoals: Omit<Goal, 'achieved'>[] = [
     { id: '1', type: 'Registrations', target: 0 },
     { id: '2', type: 'Enrollments', target: 0 },
     { id: '3', type: 'Engagement', target: 0 },
+    { id: '4', type: 'Cancellations', target: 0 },
 ];
 
 const updateAchieved = (currentGoals: Goal[], candidates: Candidate[], startDate?: Date, endDate?: Date) => {
@@ -47,6 +48,15 @@ const updateAchieved = (currentGoals: Goal[], candidates: Candidate[], startDate
   const totalEnrollments = enrolledOrOnceEnrolledCandidates.length;
 
   const totalEngaged = enrolledOrOnceEnrolledCandidates.filter(c => c.firstPaymentPaid === true).length;
+  
+  const totalCancellations = candidates.filter(c => {
+    if (c.status !== 'Canceled') return false;
+    if (!c.cancellationDate) return false;
+    try {
+        const cancelDate = parseISO(c.cancellationDate);
+        return isWithinInterval(cancelDate, { start: startDate, end: endDate });
+    } catch { return false; }
+  }).length;
 
 
   return currentGoals.map(goal => {
@@ -58,6 +68,9 @@ const updateAchieved = (currentGoals: Goal[], candidates: Candidate[], startDate
       }
        if (goal.type === 'Engagement') {
         return { ...goal, achieved: totalEngaged };
+      }
+      if (goal.type === 'Cancellations') {
+        return { ...goal, achieved: totalCancellations };
       }
       return goal;
     });

@@ -15,6 +15,7 @@ export function GoalsChart() {
   const registrationGoal = goals.find(g => g.type === 'Registrations');
   const enrollmentGoal = goals.find(g => g.type === 'Enrollments');
   const engagementGoal = goals.find(g => g.type === 'Engagement');
+  const cancellationGoal = goals.find(g => g.type === 'Cancellations');
   
   const registrationProgress = registrationGoal && registrationGoal.target > 0 
     ? (registrationGoal.achieved / registrationGoal.target) * 100 
@@ -26,6 +27,10 @@ export function GoalsChart() {
 
   const engagementProgress = engagementGoal && engagementGoal.target > 0
     ? (engagementGoal.achieved / engagementGoal.target) * 100
+    : 0;
+
+  const cancellationProgress = cancellationGoal && cancellationGoal.target > 0
+    ? (cancellationGoal.achieved / cancellationGoal.target) * 100
     : 0;
 
   return (
@@ -73,6 +78,20 @@ export function GoalsChart() {
                     <Progress value={engagementProgress} className="h-8 bg-secondary shadow-inner" indicatorClassName="bg-chart-5" />
                     <div className="absolute inset-0 flex items-center px-3">
                         <span className="text-xs font-black text-white drop-shadow-md">{engagementProgress.toFixed(1)}%</span>
+                    </div>
+                </div>
+            </div>
+        )}
+         {cancellationGoal && (
+             <div className="space-y-1.5">
+                <div className="flex justify-between items-end">
+                    <span className="text-sm font-bold text-destructive">Cancelamentos</span>
+                    <span className="text-xs font-medium text-muted-foreground">{cancellationGoal.achieved} / {cancellationGoal.target}</span>
+                </div>
+                <div className="relative">
+                    <Progress value={cancellationProgress} className="h-8 bg-secondary shadow-inner" indicatorClassName="bg-destructive" />
+                    <div className="absolute inset-0 flex items-center px-3">
+                        <span className="text-xs font-black text-white drop-shadow-md">{cancellationProgress.toFixed(1)}%</span>
                     </div>
                 </div>
             </div>
